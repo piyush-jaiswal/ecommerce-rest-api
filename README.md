@@ -25,13 +25,13 @@ To test the API using Postman, install postman agent in your OS and call the API
 
 ### Endpoints
 
-##### Category
+#### Category
 - [GET] `/categories` - Get all categories
 - [GET] `/category/(int: category_id)` - Get category with category_id
 - [DELETE] `/category/(int: category_id)` - Delete category with category_id
 
 - [POST] `/category/create` - Create a new category
-```json
+```
 {
   "name": "name",
   "subcategories": [<subcategory ids>] //optional
@@ -39,7 +39,7 @@ To test the API using Postman, install postman agent in your OS and call the API
 ```
 
 - [PUT] `/category/(int: category_id)/update` - Update category with category_id
-```json
+```
 {
   "name": "name",
   "subcategories": [<subcategory ids>] //optional
@@ -47,22 +47,22 @@ To test the API using Postman, install postman agent in your OS and call the API
 ```
 
 <br></br>
-##### Subcategory
+#### Subcategory
 - [GET] `/subcategories` - Get all subcategories
 - [GET] `/subcategory/(int: subcategory_id)` - Get subcategory with subcategory_id
 - [DELETE] `/subcategory/(int: subcategory_id)` - Delete subcategory with subcategory_id
 
 - [POST] `/subcategory/create` - Create a new subcategory
-```json
+```
 {
   "name": "name",
-  "categories": [<category ids>] //optional
+  "categories": [(category ids)] //optional
   "products": [<subcategory ids>] // optional
 }
 ```
 
 - [PUT] `/subcategory/(int: subcategory_id)/update` - Update subcategory with subcategory_id
-```json
+```
 {
   "name": "name",
   "categories": [<category ids>] //optional
@@ -72,13 +72,13 @@ To test the API using Postman, install postman agent in your OS and call the API
 
 
 <br></br>
-##### Product
+#### Product
 - [GET] `/products` - Get all products
 - [GET] `/product/(int: product_id)` - Get product with product_id
 - [DELETE] `/product/(int: product_id)` - Delete product with product_id
 
 - [POST] `/product/create` - Create a new product
-```json
+```
 {
   "name": "name",
   "description": "description",
@@ -87,7 +87,7 @@ To test the API using Postman, install postman agent in your OS and call the API
 ```
 
 - [PUT] `/product/(int: product_id)/update` - Update product with product_id
-```json
+```
 {
   "name": "name",
   "description": "description",
@@ -97,7 +97,7 @@ To test the API using Postman, install postman agent in your OS and call the API
 
 
 <br></br>
-##### Fetch products using name, category, subcategory
+#### Fetch products using name, category, subcategory
 - [GET] `/product/<name: string>` - Get product with name: `name`
 <br></br>
 - [GET] `/subcategory/<subcategory_id: int>/products` - Get product with within subcategory `subcategory`. Returns first page of the paginated results.
