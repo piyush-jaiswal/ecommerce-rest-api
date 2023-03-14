@@ -1,15 +1,10 @@
 <h1>Ecommerce REST API</h1>
-RESTful API using Python Flask that allows users to manage
-their ecommerce platform. Ability to create, read, update, and delete
-products, categories and subcategories.
-
-A category can have multiple subcategories and a subcategory can belong to
-multiple categories. Products can belong to multiple categories and subcategories. 
-
-Fetching a product fetches the details of categories and
-subcategories it belongs to. Provides the ability to search for products by name, category and
-subcategories.
-
+RESTful API using Python Flask that allows users to manage their ecommerce platform.
+<br></br>
+Ability to create, read, update, and delete products, categories and subcategories. A category can have multiple subcategories and a subcategory can belong to multiple categories. Products can belong to multiple categories and subcategories.
+<br></br>
+Fetching a product fetches the details of categories and subcategories it belongs to. Provides the ability to search for products by name, category and subcategories.
+<br></br>
 Paginates result when products are fetched by categories or subcategories. 
 
 ### Requirements
