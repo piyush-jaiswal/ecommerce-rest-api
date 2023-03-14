@@ -19,12 +19,24 @@ Start the server:
 
 `python app.py` (Starts the server on 127.0.0.1:5000)
 
-This project is preloaded with a dummy sqlite database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and start the server.
+This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and start the server.
 
 To test the API using Postman, install postman agent in your OS and call the API using Postman.
 
 ### Endpoints
 
+#### Fetch products using name, category, subcategory
+- [GET] `/product/<name: string>` - Get product with name: `name`
+<br></br>
+- [GET] `/subcategory/<subcategory_id: int>/products` - Get product with within subcategory `subcategory`. Returns first page of the paginated results.
+<br></br>
+- [GET] `/subcategory/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results.
+<br></br>
+- [GET] `/category/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results.
+<br></br>
+- [GET] `/category/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results.
+
+<br></br>
 #### Category
 - [GET] `/categories` - Get all categories
 - [GET] `/category/(int: category_id)` - Get category with category_id
@@ -94,16 +106,3 @@ To test the API using Postman, install postman agent in your OS and call the API
   "subcategories": [<subcategory ids>] //optional
 }
 ```
-
-
-<br></br>
-#### Fetch products using name, category, subcategory
-- [GET] `/product/<name: string>` - Get product with name: `name`
-<br></br>
-- [GET] `/subcategory/<subcategory_id: int>/products` - Get product with within subcategory `subcategory`. Returns first page of the paginated results.
-<br></br>
-- [GET] `/subcategory/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results.
-<br></br>
-- [GET] `/category/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results.
-<br></br>
-- [GET] `/category/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results.
