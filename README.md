@@ -17,9 +17,15 @@ pip install -r requirements.txt
 
 Start the server:
 
-`python app.py` (Starts the server on 127.0.0.1:5000)
+`flask run --app app run [--debug]` (Starts the server on 127.0.0.1:5000)
 
-This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and start the server.
+This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and:
+
+```bash
+flask shell
+>>> with app.app_context():
+>>>     db.create_all()
+```
 
 To test the API using Postman, install postman agent in your OS and call the API using Postman.
 

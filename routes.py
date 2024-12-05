@@ -2,7 +2,7 @@ import itertools
 
 from flask import request, abort, jsonify
 
-from __main__ import app, db
+from app import app, db
 from models import Category, Subcategory, Product
 
 
