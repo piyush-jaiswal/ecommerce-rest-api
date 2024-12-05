@@ -8,6 +8,8 @@ Fetching a product fetches the details of categories and subcategories it belong
 Paginates result when products are fetched by categories or subcategories. 
 
 ### Requirements
+This project is written in `Python 3.12.1`
+
 ```bash
 pip install -r requirements.txt
 ```
