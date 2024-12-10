@@ -2,8 +2,8 @@ import itertools
 
 from flask import request, abort, jsonify
 
-from app import app, db
-from models import Category, Subcategory, Product
+from api import app, db
+from api.models import Category, Subcategory, Product
 
 
 @app.route('/', methods=['GET'])
