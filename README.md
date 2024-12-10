@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 Start the server:
 
-`flask run --app app run [--debug]` (Starts the server on 127.0.0.1:5000)
+`flask --app app run [--debug]` (Starts the server on 127.0.0.1:5000)
 
 This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and:
 
