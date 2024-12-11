@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from api import db
+from app import db
 
 
 category_subcategory = db.Table("category_subcategory",
