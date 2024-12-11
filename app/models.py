@@ -11,12 +11,12 @@ def handle_integrity_error(error):
     return response
   
 category_subcategory = db.Table("category_subcategory",
-                                db.Column("category_id", db.Integer, db.ForeignKey("category.id")),
-                                db.Column("subcategory_id", db.Integer, db.ForeignKey("subcategory.id")))
+                                db.Column("category_id", db.Integer, db.ForeignKey("category.id", ondelete="CASCADE"), index=True),
+                                db.Column("subcategory_id", db.Integer, db.ForeignKey("subcategory.id", ondelete="CASCADE"), index=True))
 
 subcategory_product = db.Table("subcategory_product",
-                                db.Column("subcategory_id", db.Integer, db.ForeignKey("subcategory.id")),
-                                db.Column("product_id", db.Integer, db.ForeignKey("product.id")))
+                                db.Column("subcategory_id", db.Integer, db.ForeignKey("subcategory.id", ondelete="CASCADE"), index=True),
+                                db.Column("product_id", db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), index=True))
 
 
 class Category(db.Model):
