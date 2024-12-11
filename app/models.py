@@ -1,8 +1,15 @@
 from datetime import datetime
-
 from app import db
+from flask import Flask, jsonify
+from sqlalchemy.exc import IntegrityError
 
 
+@app.errorhandler(IntegrityError)
+def handle_integrity_error(error):
+    response = jsonify({"error": "There is a conflict with the database integrity", "details": str(error.orig)})
+    response.status_code = 400
+    return response
+  
 category_subcategory = db.Table("category_subcategory",
                                 db.Column("category_id", db.Integer, db.ForeignKey("category.id")),
                                 db.Column("subcategory_id", db.Integer, db.ForeignKey("subcategory.id")))
