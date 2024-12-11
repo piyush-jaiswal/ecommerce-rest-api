@@ -24,7 +24,7 @@ Start the server:
 This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and:
 
 ```bash
-flask shell
+flask --app app shell
 >>> with app.app_context():
 >>>     db.create_all()
 ```

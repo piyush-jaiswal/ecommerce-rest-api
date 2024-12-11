@@ -3,6 +3,7 @@ __pycache__/
 
 # Environments
 .env
+.env.local
 .venv
 env/
 venv/
@@ -15,3 +16,4 @@ venv.bak/
 
 # Others
 notes.txt
+.vercel
