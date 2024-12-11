@@ -19,51 +19,37 @@ subcategory_product = db.Table("subcategory_product",
                                 db.Column("product_id", db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), index=True))
 
 
-class Category(db.Model):
+class BaseModel(db.Model):
+    __abstract__ = True
+
+    def to_json(self):
+        return {col.name: getattr(self, col.name).isoformat() if isinstance(getattr(self, col.name), datetime) 
+                else getattr(self, col.name) 
+                for col in self.__table__.columns}
+        
+class Category(BaseModel):
     __tablename__ = 'category'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     subcategories = db.relationship("Subcategory", secondary=category_subcategory, backref="categories", lazy='dynamic')
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created_at': self.created_at,
-            'subcategories': [subcategory.id for subcategory in self.subcategories]
-        }
 
 
-class Subcategory(db.Model):
+class Subcategory(BaseModel):
     __tablename__ = 'subcategory'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     products = db.relationship("Product", secondary=subcategory_product, backref="subcategories", lazy='dynamic')
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created_at': self.created_at,
-            'categories': [c.id for c in self.categories],
-            'products': [p.id for p in self.products]
-        }
 
 
-class Product(db.Model):
+class Product(BaseModel):
     __tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'created_at': self.created_at,
-            'subcategories': [s.id for s in self.subcategories]
-        }
+  
