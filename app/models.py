@@ -32,7 +32,7 @@ class Category(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    subcategories = db.relationship("Subcategory", secondary=category_subcategory, backref="categories", lazy='dynamic')
+    subcategories = db.relationship("Subcategory", secondary=category_subcategory, back_populates="categories", lazy='joined')
 
 
 
@@ -41,7 +41,7 @@ class Subcategory(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    products = db.relationship("Product", secondary=subcategory_product, backref="subcategories", lazy='dynamic')
+    products = db.relationship("Product", secondary=subcategory_product, back_populates="subcategories", lazy='joined')
 
 
 
