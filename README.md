@@ -13,15 +13,13 @@ This project is written in `Python 3.12.1`
 ```bash
 pip install -r requirements.txt
 ```
-
+`requirements.txt` contains an adapter for PostgreSQL by default.
 
 ### Usage
 
-Start the server:
+Copy `.env.example` and rename to `.env`. Provide your database URL to the `SQLALCHEMY_DATABASE_URI` environment variable.
 
-`flask --app app run [--debug]` (Starts the server on 127.0.0.1:5000)
-
-This project is preloaded with a dummy `sqlite` database located in the `instance` directory. To start from a scratch db, delete the `instance` directory and:
+Create database tables:
 
 ```bash
 flask --app app shell
@@ -29,7 +27,13 @@ flask --app app shell
 >>>     db.create_all()
 ```
 
-To test the API using Postman, install postman agent in your OS and call the API using Postman.
+Start the server: (Runs on 127.0.0.1:5000)
+
+```bash
+flask --app app run [--debug]
+``` 
+
+Test the API using Postman, cURL or your preferred HTTP client.
 
 ### Endpoints
 
