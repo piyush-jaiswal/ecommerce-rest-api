@@ -250,7 +250,7 @@ def get_subcategory_products(sc_id):
     try:
         page = request.args.get("page", default=1, type=int)
         return {
-            "products": [p.id for p in subcategory.products.paginate(page=page, per_page=2)]
+            "products": [p.id for p in subcategory.products.paginate(page=page, per_page=2, error_out=False)]
         }, 200
     except:
         return "Error occured", 500
