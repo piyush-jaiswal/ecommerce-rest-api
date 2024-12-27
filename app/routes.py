@@ -268,6 +268,7 @@ def get_category_products(c_id):
             .join(subcategory_product)
             .join(category_subcategory, onclause=subcategory_product.c.subcategory_id == category_subcategory.c.subcategory_id)
             .filter(category_subcategory.c.category_id == c_id)
+            .distinct()
             .paginate(page=page, per_page=2, error_out=False)
         )
 
