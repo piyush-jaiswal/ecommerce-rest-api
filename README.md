@@ -81,7 +81,7 @@ Test the API using Postman, cURL or your preferred HTTP client.
 {
   "name": "name",
   "categories": [(category ids)] //optional
-  "products": [<subcategory ids>] // optional
+  "products": [<product ids>] // optional
 }
 ```
 
@@ -90,7 +90,7 @@ Test the API using Postman, cURL or your preferred HTTP client.
 {
   "name": "name",
   "categories": [<category ids>] //optional
-  "products": [<subcategory ids>] // optional
+  "products": [<product ids>] // optional
 }
 ```
 
