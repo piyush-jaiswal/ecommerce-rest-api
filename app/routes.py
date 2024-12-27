@@ -1,9 +1,7 @@
-import itertools
-
 from flask import request, abort, jsonify
 
 from app import app, db
-from app.models import Category, Subcategory, Product
+from app.models import Category, Subcategory, Product, category_subcategory, subcategory_product
 
 
 @app.route('/', methods=['GET'])
@@ -258,14 +256,21 @@ def get_subcategory_products(sc_id):
 
 @app.route('/category/<int:c_id>/products', methods=['GET'])
 def get_category_products(c_id):
-    category = Category.query.get(c_id)
-    if not category:
+    category_exists = db.session.query(Category.id).filter_by(id=c_id).first() is not None
+    if not category_exists:
         abort(404)
 
     try:
         page = request.args.get("page", default=1, type=int)
-        gen = itertools.chain.from_iterable(sc.products for sc in category.subcategories)
-        products = itertools.islice(gen, (page - 1) * 2, page * 2)
+
+        products = (
+            Product.query
+            .join(subcategory_product)
+            .join(category_subcategory, onclause=subcategory_product.c.subcategory_id == category_subcategory.c.subcategory_id)
+            .filter(category_subcategory.c.category_id == c_id)
+            .paginate(page=page, per_page=2, error_out=False)
+        )
+
         return {
             "products": [p.id for p in products]
         }, 200
