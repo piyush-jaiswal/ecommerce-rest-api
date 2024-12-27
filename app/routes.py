@@ -247,8 +247,9 @@ def get_subcategory_products(sc_id):
 
     try:
         page = request.args.get("page", default=1, type=int)
+        products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
         return {
-            "products": [p.id for p in subcategory.products.paginate(page=page, per_page=2, error_out=False)]
+            "products": [p.id for p in products]
         }, 200
     except:
         return "Error occured", 500
@@ -269,6 +270,7 @@ def get_category_products(c_id):
             .join(category_subcategory, onclause=subcategory_product.c.subcategory_id == category_subcategory.c.subcategory_id)
             .filter(category_subcategory.c.category_id == c_id)
             .distinct()
+            .order_by(Product.id.asc())
             .paginate(page=page, per_page=2, error_out=False)
         )
 
