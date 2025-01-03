@@ -5,7 +5,11 @@ Ability to create, read, update, and delete products, categories and subcategori
 <br></br>
 Fetching a product fetches the details of categories and subcategories it belongs to. Provides the ability to search for products by name, category and subcategories.
 <br></br>
-Paginates result when products are fetched by categories or subcategories. 
+Paginates result when products are fetched by categories or subcategories.
+
+<br/>
+
+Deployed as a vercel function: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 
 ### Requirements
 This project is written in `Python 3.12.1`
