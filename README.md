@@ -7,9 +7,10 @@ Fetching a product fetches the details of categories and subcategories it belong
 <br></br>
 Paginates result when products are fetched by categories or subcategories.
 
-<br/>
+<br>
+<br>
 
-Deployed as a vercel function: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
+Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
 
 ### Requirements
