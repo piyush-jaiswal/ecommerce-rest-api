@@ -10,6 +10,7 @@ Paginates result when products are fetched by categories or subcategories.
 <br/>
 
 Deployed as a vercel function: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
+<br> Documented with Swagger UI.
 
 ### Requirements
 This project is written in `Python 3.12.1`
@@ -37,7 +38,7 @@ Start the server: (Runs on 127.0.0.1:5000)
 flask --app app run [--debug]
 ``` 
 
-Test the API using Postman, cURL or your preferred HTTP client.
+Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP client.
 
 ### Endpoints
 
