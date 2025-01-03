@@ -198,9 +198,12 @@ def update_product(p_id):
         abort(404)
     try:
         name = request.json.get('name')
+        description = request.json.get('description')
         sc_ids = request.json.get('subcategories')
         if name is not None:
             product.name = name
+        if description is not None:
+            product.description = description
         if sc_ids is not None:
             subcategories = Subcategory.query.filter(Subcategory.id.in_(sc_ids))
             product.subcategories.extend(subcategories)
