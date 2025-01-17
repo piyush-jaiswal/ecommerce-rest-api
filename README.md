@@ -28,9 +28,7 @@ Copy `.env.example` and rename to `.env`. Provide your database URL to the `SQLA
 Create database tables:
 
 ```bash
-flask --app app shell
->>> with app.app_context():
->>>     db.create_all()
+flask db upgrade head
 ```
 
 Start the server: (Runs on 127.0.0.1:5000)
