@@ -14,7 +14,8 @@ load_dotenv()
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# PostgreSQL-compatible naming convention
+# PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
+# https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
 naming_convention = {
     "ix": "%(table_name)s_%(column_0_name)s_idx",       # Indexes
     "uq": "%(table_name)s_%(column_0_name)s_key",       # Unique constraints
