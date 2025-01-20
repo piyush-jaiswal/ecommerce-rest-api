@@ -17,7 +17,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    subcategories = db.relationship("Subcategory", secondary=category_subcategory, backref="categories", lazy='dynamic')
+    subcategories = db.relationship("Subcategory", secondary=category_subcategory, back_populates="categories", lazy='dynamic')
 
     def to_json(self):
         return {
@@ -33,7 +33,8 @@ class Subcategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    products = db.relationship("Product", secondary=subcategory_product, backref="subcategories", lazy='dynamic')
+    categories = db.relationship("Category", secondary=category_subcategory, back_populates="subcategories", lazy='dynamic')
+    products = db.relationship("Product", secondary=subcategory_product, back_populates="subcategories", lazy='dynamic')
 
     def to_json(self):
         return {
@@ -51,6 +52,7 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    subcategories = db.relationship("Subcategory", secondary=subcategory_product, back_populates="products", lazy='dynamic')
 
     def to_json(self):
         return {
