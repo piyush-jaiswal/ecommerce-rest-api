@@ -52,22 +52,6 @@ def create_category():
         return "Error occured", 500
 
 
-@app.route('/categories', methods=['GET'])
-def get_all_categories():
-    """
-    Get All Categories
-    ---
-    tags:
-        - Category
-    description: Get all categories.
-    responses:
-        200:
-            description: A list of categories.
-    """
-    categories = Category.query.order_by(Category.name).all()
-    return jsonify({"categories": [category.to_json() for category in categories]}), 200
-
-
 @app.route('/category/<int:c_id>', methods=['GET'])
 def get_category(c_id):
     """
@@ -185,6 +169,22 @@ def delete_category(c_id):
         return "Error occured", 500
 
 
+@app.route('/categories', methods=['GET'])
+def get_all_categories():
+    """
+    Get All Categories
+    ---
+    tags:
+        - Category
+    description: Get all categories.
+    responses:
+        200:
+            description: A list of categories.
+    """
+    categories = Category.query.order_by(Category.name).all()
+    return jsonify({"categories": [category.to_json() for category in categories]}), 200
+
+
 @app.route('/category/<int:c_id>/subcategories', methods=['GET'])
 def get_category_subcategories(c_id):
     """
@@ -214,6 +214,57 @@ def get_category_subcategories(c_id):
     try:
         return {
             "subcategories": [sc.to_json() for sc in category.subcategories]
+        }, 200
+    except:
+        return "Error occured", 500
+
+
+@app.route('/category/<int:c_id>/products', methods=['GET'])
+def get_category_products(c_id):
+    """
+    Get Products within a Category.
+    ---
+    tags:
+        - Category
+    description: Get Products for a Category.
+    parameters:
+        - in: path
+          name: c_id
+          required: true
+          type: integer
+          description: Category ID
+        - in: query
+          name: page
+          type: integer
+          default: 1
+          description: Page number
+    responses:
+        200:
+            description: Products retrieved successfully.
+        404:
+            description: Category not found.
+        500:
+            description: Error occurred.
+    """
+    category_exists = db.session.query(Category.id).filter_by(id=c_id).first() is not None
+    if not category_exists:
+        abort(404)
+
+    try:
+        page = request.args.get("page", default=1, type=int)
+
+        products = (
+            Product.query
+            .join(subcategory_product)
+            .join(category_subcategory, onclause=subcategory_product.c.subcategory_id == category_subcategory.c.subcategory_id)
+            .filter(category_subcategory.c.category_id == c_id)
+            .distinct()
+            .order_by(Product.id.asc())
+            .paginate(page=page, per_page=2, error_out=False)
+        )
+
+        return {
+            "products": [p.id for p in products]
         }, 200
     except:
         return "Error occured", 500
@@ -452,6 +503,47 @@ def get_subcategory_categories(sc_id):
         return "Error occured", 500
 
 
+@app.route('/subcategory/<int:sc_id>/products', methods=['GET'])
+def get_subcategory_products(sc_id):
+    """
+    Get Products within a Subcategory.
+    ---
+    tags:
+        - Subcategory
+    description: Get products for a subcategory.
+    parameters:
+        - in: path
+          name: sc_id
+          required: true
+          type: integer
+          description: Subcategory ID
+        - in: query
+          name: page
+          type: integer
+          default: 1
+          description: Page number
+    responses:
+        200:
+            description: Products retrieved successfully.
+        404:
+            description: Subcategory not found.
+        500:
+            description: Error occurred.
+    """
+    subcategory = Subcategory.query.get(sc_id)
+    if not subcategory:
+        abort(404)
+
+    try:
+        page = request.args.get("page", default=1, type=int)
+        products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
+        return {
+            "products": [p.id for p in products]
+        }, 200
+    except:
+        return "Error occured", 500
+
+
 @app.route('/product/create', methods=['POST'])
 def create_product():
     """
@@ -503,22 +595,6 @@ def create_product():
         return jsonify(product.to_json()), 201
     except:
         return "Error occured", 500
-
-
-@app.route('/products', methods=['GET'])
-def get_all_products():
-    """
-    Get All Products
-    ---
-    tags:
-        - Product
-    description: Get all products.
-    responses:
-        200:
-            description: A list of products.
-    """
-    products = Product.query.order_by(Product.name).all()
-    return jsonify({"products": [product.to_json() for product in products]}), 200
 
 
 @app.route('/product/<int:p_id>', methods=['GET'])
@@ -681,6 +757,22 @@ def get_product_by_name(name):
         return "Error occured", 500
 
 
+@app.route('/products', methods=['GET'])
+def get_all_products():
+    """
+    Get All Products
+    ---
+    tags:
+        - Product
+    description: Get all products.
+    responses:
+        200:
+            description: A list of products.
+    """
+    products = Product.query.order_by(Product.name).all()
+    return jsonify({"products": [product.to_json() for product in products]}), 200
+
+
 @app.route('/product/<int:p_id>/subcategories', methods=['GET'])
 def get_product_subcategories(p_id):
     """
@@ -710,98 +802,6 @@ def get_product_subcategories(p_id):
     try:
         return {
             "subcategories": [sc.to_json() for sc in product.subcategories]
-        }, 200
-    except:
-        return "Error occured", 500
-
-
-@app.route('/subcategory/<int:sc_id>/products', methods=['GET'])
-def get_subcategory_products(sc_id):
-    """
-    Get Products within a Subcategory.
-    ---
-    tags:
-        - Subcategory
-    description: Get products for a subcategory.
-    parameters:
-        - in: path
-          name: sc_id
-          required: true
-          type: integer
-          description: Subcategory ID
-        - in: query
-          name: page
-          type: integer
-          default: 1
-          description: Page number
-    responses:
-        200:
-            description: Products retrieved successfully.
-        404:
-            description: Subcategory not found.
-        500:
-            description: Error occurred.
-    """
-    subcategory = Subcategory.query.get(sc_id)
-    if not subcategory:
-        abort(404)
-
-    try:
-        page = request.args.get("page", default=1, type=int)
-        products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
-        return {
-            "products": [p.id for p in products]
-        }, 200
-    except:
-        return "Error occured", 500
-
-
-@app.route('/category/<int:c_id>/products', methods=['GET'])
-def get_category_products(c_id):
-    """
-    Get Products within a Category.
-    ---
-    tags:
-        - Category
-    description: Get Products for a Category.
-    parameters:
-        - in: path
-          name: c_id
-          required: true
-          type: integer
-          description: Category ID
-        - in: query
-          name: page
-          type: integer
-          default: 1
-          description: Page number
-    responses:
-        200:
-            description: Products retrieved successfully.
-        404:
-            description: Category not found.
-        500:
-            description: Error occurred.
-    """
-    category_exists = db.session.query(Category.id).filter_by(id=c_id).first() is not None
-    if not category_exists:
-        abort(404)
-
-    try:
-        page = request.args.get("page", default=1, type=int)
-
-        products = (
-            Product.query
-            .join(subcategory_product)
-            .join(category_subcategory, onclause=subcategory_product.c.subcategory_id == category_subcategory.c.subcategory_id)
-            .filter(category_subcategory.c.category_id == c_id)
-            .distinct()
-            .order_by(Product.id.asc())
-            .paginate(page=page, per_page=2, error_out=False)
-        )
-
-        return {
-            "products": [p.id for p in products]
         }, 200
     except:
         return "Error occured", 500
