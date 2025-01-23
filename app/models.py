@@ -29,7 +29,6 @@ class Category(db.Model):
             'id': self.id,
             'name': self.name,
             'created_at': self.created_at,
-            'subcategories': [subcategory.id for subcategory in self.subcategories]
         }
 
 
@@ -46,8 +45,6 @@ class Subcategory(db.Model):
             'id': self.id,
             'name': self.name,
             'created_at': self.created_at,
-            'categories': [c.id for c in self.categories],
-            'products': [p.id for p in self.products]
         }
 
 
@@ -65,5 +62,4 @@ class Product(db.Model):
             'name': self.name,
             'description': self.description,
             'created_at': self.created_at,
-            'subcategories': [s.id for s in self.subcategories]
         }

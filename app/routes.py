@@ -185,6 +185,40 @@ def delete_category(c_id):
         return "Error occured", 500
 
 
+@app.route('/category/<int:c_id>/subcategories', methods=['GET'])
+def get_category_subcategories(c_id):
+    """
+    Get Subcategories within a Category.
+    ---
+    tags:
+        - Category
+    description: Get Subcategories within a Category.
+    parameters:
+        - in: path
+          name: c_id
+          required: true
+          type: integer
+          description: Category ID
+    responses:
+        200:
+            description: Subcategories retrieved successfully.
+        404:
+            description: Category not found.
+        500:
+            description: Error occurred.
+    """
+    category = Category.query.get(c_id)
+    if category is None:
+        abort(404)
+
+    try:
+        return {
+            "subcategories": [sc.to_json() for sc in category.subcategories]
+        }, 200
+    except:
+        return "Error occured", 500
+
+
 @app.route('/subcategory/create', methods=['POST'])
 def create_subcategory():
     """
@@ -380,6 +414,40 @@ def delete_subcategory(sc_id):
         db.session.delete(subcategory)
         db.session.commit()
         return jsonify({'result': True}), 200
+    except:
+        return "Error occured", 500
+
+
+@app.route('/subcategory/<int:sc_id>/categories', methods=['GET'])
+def get_subcategory_categories(sc_id):
+    """
+    Get Categories related to a Subcategory.
+    ---
+    tags:
+        - Subcategory
+    description: Get Categories related to a Subcategory.
+    parameters:
+        - in: path
+          name: sc_id
+          required: true
+          type: integer
+          description: Subcategory ID
+    responses:
+        200:
+            description: Categories retrieved successfully.
+        404:
+            description: Subcategory not found.
+        500:
+            description: Error occurred.
+    """
+    subcategory = Subcategory.query.get(sc_id)
+    if subcategory is None:
+        abort(404)
+
+    try:
+        return {
+            "categories": [c.to_json() for c in subcategory.categories]
+        }, 200
     except:
         return "Error occured", 500
 
@@ -613,13 +681,47 @@ def get_product_by_name(name):
         return "Error occured", 500
 
 
-@app.route('/subcategory/<int:sc_id>/products', methods=['GET'])
-def get_subcategory_products(sc_id):
+@app.route('/product/<int:p_id>/subcategories', methods=['GET'])
+def get_product_subcategories(p_id):
     """
-    Get Subcategory Products
+    Get Subcategories related to a Product.
     ---
     tags:
         - Product
+    description: Get Subcategories related to a Product.
+    parameters:
+        - in: path
+          name: p_id
+          required: true
+          type: integer
+          description: Product ID
+    responses:
+        200:
+            description: Subcategories retrieved successfully.
+        404:
+            description: Product not found.
+        500:
+            description: Error occurred.
+    """
+    product = Product.query.get(p_id)
+    if product is None:
+        abort(404)
+
+    try:
+        return {
+            "subcategories": [sc.to_json() for sc in product.subcategories]
+        }, 200
+    except:
+        return "Error occured", 500
+
+
+@app.route('/subcategory/<int:sc_id>/products', methods=['GET'])
+def get_subcategory_products(sc_id):
+    """
+    Get Products within a Subcategory.
+    ---
+    tags:
+        - Subcategory
     description: Get products for a subcategory.
     parameters:
         - in: path
@@ -657,11 +759,11 @@ def get_subcategory_products(sc_id):
 @app.route('/category/<int:c_id>/products', methods=['GET'])
 def get_category_products(c_id):
     """
-    Get Category Products
+    Get Products within a Category.
     ---
     tags:
-        - Product
-    description: Get products for a category.
+        - Category
+    description: Get Products for a Category.
     parameters:
         - in: path
           name: c_id
