@@ -264,7 +264,7 @@ def get_category_products(c_id):
         )
 
         return {
-            "products": [p.id for p in products]
+            "products": [p.to_json() for p in products]
         }, 200
     except:
         return "Error occured", 500
@@ -538,7 +538,7 @@ def get_subcategory_products(sc_id):
         page = request.args.get("page", default=1, type=int)
         products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
         return {
-            "products": [p.id for p in products]
+            "products": [p.to_json() for p in products]
         }, 200
     except:
         return "Error occured", 500
