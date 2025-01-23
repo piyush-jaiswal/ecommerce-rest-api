@@ -765,11 +765,18 @@ def get_all_products():
     tags:
         - Product
     description: Get all products.
+    parameters:
+        - in: query
+          name: page
+          type: integer
+          default: 1
+          description: Page number
     responses:
         200:
-            description: A list of products.
+            description: A list of products for that page.
     """
-    products = Product.query.order_by(Product.name).all()
+    page = request.args.get("page", default=1, type=int)
+    products = Product.query.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
     return jsonify({"products": [product.to_json() for product in products]}), 200
 
 
