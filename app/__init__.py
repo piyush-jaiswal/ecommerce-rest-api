@@ -41,11 +41,6 @@ swagger_config = {
             "route": '/api_spec.json',
             "rule_filter": lambda rule: True,  # all in
             "model_filter": lambda tag: True,  # all in
-            'tags': [
-                {'name': 'Category', 'description': 'Operations with categories'},
-                {'name': 'Subategory', 'description': 'Operations with subategories'},
-                {'name': 'Product', 'description': 'Operations with products'}
-            ],
         }
     ],
     'specs_route': '/',
