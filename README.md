@@ -31,6 +31,13 @@ Create database tables:
 flask db upgrade head
 ```
 
+(Optional) Populate database with fake data :
+
+```bash
+pip install -r requirements-dev.txt
+python populate_db.py
+```
+
 Start the server: (Runs on 127.0.0.1:5000)
 
 ```bash
