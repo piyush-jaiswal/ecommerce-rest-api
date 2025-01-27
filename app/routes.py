@@ -260,7 +260,7 @@ def get_category_products(c_id):
             .filter(category_subcategory.c.category_id == c_id)
             .distinct()
             .order_by(Product.id.asc())
-            .paginate(page=page, per_page=2, error_out=False)
+            .paginate(page=page, per_page=10, error_out=False)
         )
 
         return {
@@ -536,7 +536,7 @@ def get_subcategory_products(sc_id):
 
     try:
         page = request.args.get("page", default=1, type=int)
-        products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
+        products = subcategory.products.order_by(Product.id.asc()).paginate(page=page, per_page=10, error_out=False)
         return {
             "products": [p.to_json() for p in products]
         }, 200
@@ -776,7 +776,7 @@ def get_all_products():
             description: A list of products for that page.
     """
     page = request.args.get("page", default=1, type=int)
-    products = Product.query.order_by(Product.id.asc()).paginate(page=page, per_page=2, error_out=False)
+    products = Product.query.order_by(Product.id.asc()).paginate(page=page, per_page=10, error_out=False)
     return jsonify({"products": [product.to_json() for product in products]}), 200
 
 
