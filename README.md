@@ -13,6 +13,8 @@ Paginates result when products are fetched by categories or subcategories.
 Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
 
+<br/>
+
 ### Requirements
 This project is written in `Python 3.12.1`
 
@@ -20,6 +22,8 @@ This project is written in `Python 3.12.1`
 pip install -r requirements.txt
 ```
 `requirements.txt` contains an adapter for PostgreSQL by default.
+
+<br/>
 
 ### Usage
 
@@ -46,18 +50,17 @@ flask --app app run [--debug]
 
 Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP client.
 
+<br/>
+
 ### Endpoints
 
 #### Fetch products using name, category, subcategory
-- [GET] `/product/<name: string>` - Get product with name: `name`
-<br></br>
-- [GET] `/subcategory/<subcategory_id: int>/products` - Get product with within subcategory `subcategory`. Returns first page of the paginated results.
-<br></br>
-- [GET] `/subcategory/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results.
-<br></br>
-- [GET] `/category/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results.
-<br></br>
-- [GET] `/category/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results.
+- [GET] `/product/<name: string>` - Get product with name: `name` <br/><br/>
+- [GET] `/subcategory/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results. <br/><br/>
+- [GET] `/category/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results. <br/><br/>
+- [GET] `/category/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results. <br/><br/>
+
+<br/>
 
 <br></br>
 #### Category
@@ -66,66 +69,68 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 - [DELETE] `/category/(int: category_id)` - Delete category with category_id
 
 - [POST] `/category/create` - Create a new category
-```
-{
-  "name": "name",
-  "subcategories": [<subcategory ids>] //optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "subcategories": [<subcategory ids>] //optional
+  }
+  ```
 
 - [PUT] `/category/(int: category_id)/update` - Update category with category_id
-```
-{
-  "name": "name",
-  "subcategories": [<subcategory ids>] //optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "subcategories": [<subcategory ids>] //optional
+  }
+  ```
 
-<br></br>
+<br/>
+
 #### Subcategory
 - [GET] `/subcategories` - Get all subcategories
 - [GET] `/subcategory/(int: subcategory_id)` - Get subcategory with subcategory_id
 - [DELETE] `/subcategory/(int: subcategory_id)` - Delete subcategory with subcategory_id
 
 - [POST] `/subcategory/create` - Create a new subcategory
-```
-{
-  "name": "name",
-  "categories": [(category ids)] //optional
-  "products": [<product ids>] // optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "categories": [(category ids)], //optional
+    "products": [<product ids>] // optional
+  }
+  ```
 
 - [PUT] `/subcategory/(int: subcategory_id)/update` - Update subcategory with subcategory_id
-```
-{
-  "name": "name",
-  "categories": [<category ids>] //optional
-  "products": [<product ids>] // optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "categories": [<category ids>], //optional
+    "products": [<product ids>] // optional
+  }
+  ```
 
 
-<br></br>
+<br/>
+
 #### Product
 - [GET] `/products` - Get all products
 - [GET] `/product/(int: product_id)` - Get product with product_id
 - [DELETE] `/product/(int: product_id)` - Delete product with product_id
 
 - [POST] `/product/create` - Create a new product
-```
-{
-  "name": "name",
-  "description": "description",
-  "subcategories": [<subcategory ids>] //optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "description": "description",
+    "subcategories": [<subcategory ids>] //optional
+  }
+  ```
 
 - [PUT] `/product/(int: product_id)/update` - Update product with product_id
-```
-{
-  "name": "name",
-  "description": "description",
-  "subcategories": [<subcategory ids>] //optional
-}
-```
+  ```
+  {
+    "name": "name",
+    "description": "description",
+    "subcategories": [<subcategory ids>] //optional
+  }
+  ```
