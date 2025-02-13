@@ -66,6 +66,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 #### Category
 - [GET] `/categories` - Get all categories
 - [GET] `/category/(int: category_id)` - Get category with category_id
+- [GET] `/category/(int: category_id)/subcategories` - Get subcategories within a category_id.
 - [DELETE] `/category/(int: category_id)` - Delete category with category_id
 
 - [POST] `/category/create` - Create a new category
@@ -89,6 +90,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 #### Subcategory
 - [GET] `/subcategories` - Get all subcategories
 - [GET] `/subcategory/(int: subcategory_id)` - Get subcategory with subcategory_id
+- [GET] `/subcategory/(int: subcategory_id)/categories` - Get categories related to subcategory_id
 - [DELETE] `/subcategory/(int: subcategory_id)` - Delete subcategory with subcategory_id
 
 - [POST] `/subcategory/create` - Create a new subcategory
@@ -115,6 +117,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 #### Product
 - [GET] `/products` - Get all products
 - [GET] `/product/(int: product_id)` - Get product with product_id
+- [GET] `/product/(int: product_id)/subcategories` - Get subcategories related to product_id
 - [DELETE] `/product/(int: product_id)` - Delete product with product_id
 
 - [POST] `/product/create` - Create a new product
