@@ -42,6 +42,13 @@ pip install -r requirements-dev.txt
 python populate_db.py
 ```
 
+Set `JWT_SECRET_KEY` environment variable. Run this in a python shell to generate sample keys:
+
+```python
+import secrets
+secrets.token_urlsafe(32) # 'fP-3vOuhEr7Nl9DdJiX5XyjOedquOrifDps2KS34Wu0'
+```
+
 Start the server: (Runs on 127.0.0.1:5000)
 
 ```bash
