@@ -62,14 +62,41 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 <br/>
 
-<br></br>
+#### Authorization
+``Protected`` endpoints require the following header:
+  `Authorization: Bearer <access_token>`
+
+``Refresh protected`` endpoints requires the following header:
+  `Authorization: Bearer <refresh_token>`
+
+#### Authentication
+- [POST] `/auth/register` - Register a new user.
+  ```
+  {
+    "email": "user@example.com",
+    "password": "your_password"
+  }
+  ```
+
+- [POST] `/auth/login` - Login a user and get access and refresh tokens.
+  ```
+  {
+    "email": "user@example.com",
+    "password": "your_password"
+  }
+  ```
+
+- [POST] `/auth/refresh` (Refresh protected) - Get new access token using a refresh token.
+  
+<br/>
+
 #### Category
 - [GET] `/categories` - Get all categories
 - [GET] `/category/(int: category_id)` - Get category with category_id
 - [GET] `/category/(int: category_id)/subcategories` - Get subcategories within a category_id.
-- [DELETE] `/category/(int: category_id)` - Delete category with category_id
+- [DELETE] `/category/(int: category_id)` (Protected) - Delete category with category_id
 
-- [POST] `/category/create` - Create a new category
+- [POST] `/category/create` (Protected) - Create a new category
   ```
   {
     "name": "name",
@@ -77,7 +104,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
   }
   ```
 
-- [PUT] `/category/(int: category_id)/update` - Update category with category_id
+- [PUT] `/category/(int: category_id)/update` (Protected) - Update category with category_id
   ```
   {
     "name": "name",
@@ -91,9 +118,9 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 - [GET] `/subcategories` - Get all subcategories
 - [GET] `/subcategory/(int: subcategory_id)` - Get subcategory with subcategory_id
 - [GET] `/subcategory/(int: subcategory_id)/categories` - Get categories related to subcategory_id
-- [DELETE] `/subcategory/(int: subcategory_id)` - Delete subcategory with subcategory_id
+- [DELETE] `/subcategory/(int: subcategory_id)` (Protected) - Delete subcategory with subcategory_id
 
-- [POST] `/subcategory/create` - Create a new subcategory
+- [POST] `/subcategory/create` (Protected) - Create a new subcategory
   ```
   {
     "name": "name",
@@ -102,7 +129,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
   }
   ```
 
-- [PUT] `/subcategory/(int: subcategory_id)/update` - Update subcategory with subcategory_id
+- [PUT] `/subcategory/(int: subcategory_id)/update` (Protected) - Update subcategory with subcategory_id
   ```
   {
     "name": "name",
@@ -118,9 +145,9 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 - [GET] `/products` - Get all products
 - [GET] `/product/(int: product_id)` - Get product with product_id
 - [GET] `/product/(int: product_id)/subcategories` - Get subcategories related to product_id
-- [DELETE] `/product/(int: product_id)` - Delete product with product_id
+- [DELETE] `/product/(int: product_id)` (Protected) - Delete product with product_id
 
-- [POST] `/product/create` - Create a new product
+- [POST] `/product/create` (Protected) - Create a new product
   ```
   {
     "name": "name",
@@ -129,7 +156,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
   }
   ```
 
-- [PUT] `/product/(int: product_id)/update` - Update product with product_id
+- [PUT] `/product/(int: product_id)/update` (Protected) - Update product with product_id
   ```
   {
     "name": "name",
