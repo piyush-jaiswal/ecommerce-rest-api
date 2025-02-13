@@ -136,6 +136,7 @@ def refresh():
 
 
 @app.route('/category/create', methods=['POST'])
+@jwt_required()
 def create_category():
     """
     Create Category
@@ -143,6 +144,8 @@ def create_category():
     tags:
         - Category
     description: Create a new category.
+    security:
+        - access_token: []
     requestBody:
         required: true
         description: name - Name of the category <br> subcategories - Array of subcategory ids (optional)
@@ -164,6 +167,8 @@ def create_category():
             description: Category created successfully.
         400:
             description: Invalid input.
+        401:
+            description: Token expired, missing or invalid.
         500:
             description: Error occurred.
     """
@@ -210,6 +215,7 @@ def get_category(c_id):
 
 
 @app.route('/category/<int:c_id>/update', methods=['PUT'])
+@jwt_required()
 def update_category(c_id):
     """
     Update Category
@@ -217,6 +223,8 @@ def update_category(c_id):
     tags:
         - Category
     description: Update an existing category.
+    security:
+        - access_token: []
     parameters:
         - in: path
           name: c_id
@@ -268,6 +276,7 @@ def update_category(c_id):
 
 
 @app.route("/category/<int:c_id>", methods=["DELETE"])
+@jwt_required()
 def delete_category(c_id):
     """
     Delete Category
@@ -275,6 +284,8 @@ def delete_category(c_id):
     tags:
         - Category
     description: Delete a category by ID.
+    security:
+        - access_token: []
     parameters:
         - in: path
           name: c_id
@@ -402,6 +413,7 @@ def get_category_products(c_id):
 
 
 @app.route('/subcategory/create', methods=['POST'])
+@jwt_required()
 def create_subcategory():
     """
     Create Subcategory
@@ -409,6 +421,8 @@ def create_subcategory():
     tags:
         - Subcategory
     description: Create a new subcategory.
+    security:
+        - access_token: []
     requestBody:
         required: true
         description: name - Name of the subcategory <br> categories - Array of category ids (optional) <br> products - Array of product ids (optional)
@@ -502,6 +516,7 @@ def get_subcategory(sc_id):
 
 
 @app.route('/subcategory/<int:sc_id>/update', methods=['PUT'])
+@jwt_required()
 def update_subcategory(sc_id):
     """
     Update Subcategory
@@ -509,6 +524,8 @@ def update_subcategory(sc_id):
     tags:
         - Subcategory
     description: Update an existing subcategory.
+    security:
+        - access_token: []
     parameters:
         - in: path
           name: sc_id
@@ -568,6 +585,7 @@ def update_subcategory(sc_id):
 
 
 @app.route("/subcategory/<int:sc_id>", methods=["DELETE"])
+@jwt_required()
 def delete_subcategory(sc_id):
     """
     Delete Subcategory
@@ -575,6 +593,8 @@ def delete_subcategory(sc_id):
     tags:
         - Subcategory
     description: Delete a subcategory by ID.
+    security:
+        - access_token: []
     parameters:
         - in: path
           name: sc_id
@@ -676,6 +696,7 @@ def get_subcategory_products(sc_id):
 
 
 @app.route('/product/create', methods=['POST'])
+@jwt_required()
 def create_product():
     """
     Create Product
@@ -683,6 +704,8 @@ def create_product():
     tags:
         - Product
     description: Create a new product.
+    security:
+        - access_token: []
     requestBody:
         required: true
         description: name - Name of the product <br> description - Description of the product (optional) <br> subcategories - Array of subcategory ids (optional)
@@ -755,6 +778,7 @@ def get_product(p_id):
 
 
 @app.route('/product/<int:p_id>/update', methods=['PUT'])
+@jwt_required()
 def update_product(p_id):
     """
     Update Product
@@ -762,6 +786,8 @@ def update_product(p_id):
     tags:
         - Product
     description: Update an existing product.
+    security:
+        - access_token: []
     consumes:
         - application/json
     parameters:
@@ -820,6 +846,7 @@ def update_product(p_id):
 
 
 @app.route("/product/<int:p_id>", methods=["DELETE"])
+@jwt_required()
 def delete_product(p_id):
     """
     Delete Product
@@ -827,6 +854,8 @@ def delete_product(p_id):
     tags:
         - Product
     description: Delete a product by ID.
+    security:
+        - access_token: []
     parameters:
         - in: path
           name: p_id
