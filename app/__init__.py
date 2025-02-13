@@ -1,6 +1,8 @@
 import os
+from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, jsonify
+from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
@@ -14,6 +16,10 @@ load_dotenv()
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=3)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=3)
+
 # PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
 # https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
 naming_convention = {
@@ -26,6 +32,7 @@ naming_convention = {
 metadata = MetaData(naming_convention=naming_convention)
 db = SQLAlchemy(app, metadata=metadata)
 migrate = Migrate(app, db)
+jwt = JWTManager(app)
 
 from app import routes
 
