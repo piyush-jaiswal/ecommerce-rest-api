@@ -34,6 +34,23 @@ db = SQLAlchemy(app, metadata=metadata)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    err = "Access token expired. Use your refresh token to get a new one."
+    if jwt_payload['type'] == 'refresh':
+        err = "Refresh token expired. Please login again."
+    return jsonify(code="token_expired", error=err), 401
+
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify(code="invalid_token", error="Invalid token provided."), 401
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify(code="authorization_required", error="JWT needed for this operation. Login, if needed."), 401
+
+
 from app import routes
 
 swagger_config = {
