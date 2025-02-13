@@ -67,14 +67,31 @@ swagger_config = {
             "model_filter": lambda tag: True,  # all in
         }
     ],
-    'specs_route': '/',
+    'components': {
+        'securitySchemes': {
+            'access_token': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Enter your JWT access token'
+            },
+            'refresh_token': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Enter your JWT refresh token'
+            }
+        }
+    },
+    'specs_route': '/'
 }
 
 template = {
     'tags': [
         {'name': 'Category', 'description': 'Operations with categories'},
         {'name': 'Subcategory', 'description': 'Operations with subategories'},
-        {'name': 'Product', 'description': 'Operations with products'}
+        {'name': 'Product', 'description': 'Operations with products'},
+        {'name': 'User', 'description': 'Operations with users'},
     ]
 }
 swagger = Swagger(app, template=template, config=swagger_config, merge=True)
