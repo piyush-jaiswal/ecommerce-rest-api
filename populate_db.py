@@ -1,6 +1,6 @@
 from faker import Faker
 from app import app, db
-from app.models import Category, Subcategory, Product
+from app.models import Category, Subcategory, Product, category_subcategory, subcategory_product
 import random
 
 
@@ -50,8 +50,17 @@ def create_relationships(categories, subcategories, products, max_category_assoc
 
 def main():
     with app.app_context():
-        db.drop_all()
-        db.create_all()
+        category_subcategory.drop(db.engine, checkfirst=True)
+        subcategory_product.drop(db.engine, checkfirst=True)
+        Category.__table__.drop(db.engine, checkfirst=True)
+        Subcategory.__table__.drop(db.engine, checkfirst=True)
+        Product.__table__.drop(db.engine, checkfirst=True)
+
+        Category.__table__.create(db.engine)
+        Subcategory.__table__.create(db.engine)
+        Product.__table__.create(db.engine)
+        category_subcategory.create(db.engine)
+        subcategory_product.create(db.engine)
 
         categories = create_categories(50)
         subcategories = create_subcategories(100)
