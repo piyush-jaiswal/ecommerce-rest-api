@@ -99,12 +99,15 @@ class TestAuth:
         login_resp = login_user(self.TEST_EMAIL, self.TEST_PASSWORD)
         tokens = login_resp.get_json()
         refresh_token = tokens["refresh_token"]
+        original_access_token = tokens["access_token"]
 
         headers = utils.get_auth_header(refresh_token)
         refresh_resp = self.client.post("/auth/refresh", headers=headers)
         assert refresh_resp.status_code == 200
         data = refresh_resp.get_json()
         assert "access_token" in data
+        assert data["access_token"] != original_access_token
+        assert "refresh_token" not in data
 
     def test_refresh_token_invalid(self, register_user, login_user):
         # Access token test
