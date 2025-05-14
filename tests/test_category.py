@@ -140,10 +140,10 @@ class TestCategory:
         self._verify_category_in_db('TestInvalid', should_exist=False)
     
     
-    def test_update_category_missing_token(self, create_category, create_authenticated_headers):
+    def test_create_category_missing_token(self):
         response = self.client.post('/category/create', json={'name': 'TestMissing'})
         utils.verify_token_error_response(response, 'authorization_required')
-        self._verify_category_in_db(self.TEST_CATEGORY_NAME, should_exist=False)
+        self._verify_category_in_db('TestMissing', should_exist=False)
     
     
     def test_update_category_expired_token(self, create_category, create_authenticated_headers):
