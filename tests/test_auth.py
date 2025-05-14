@@ -91,7 +91,7 @@ class TestAuth:
         assert 'access_token' in data
         assert 'refresh_token' in data
         assert len(data['access_token']) > 0
-        assert len(['refresh_token']) > 0
+        assert len(data['refresh_token']) > 0
 
 
     def test_login_invalid_password(self, register_user, login_user):
