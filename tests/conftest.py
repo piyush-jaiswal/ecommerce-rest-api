@@ -1,15 +1,16 @@
-import pytest
 import os
 
+import pytest
+
 # TODO: Fix hack. Changes the env var before initializing the db for testing
-os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
 from app import app, db
 
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -21,12 +22,16 @@ def client():
 @pytest.fixture
 def register_user(client):
     def _register(email, password):
-        return client.post('/auth/register', json={'email': email, 'password': password})
+        return client.post(
+            "/auth/register", json={"email": email, "password": password}
+        )
+
     return _register
 
 
 @pytest.fixture
 def login_user(client):
     def _login(email, password):
-        return client.post('/auth/login', json={'email': email, 'password': password})
+        return client.post("/auth/login", json={"email": email, "password": password})
+
     return _login
