@@ -3,7 +3,7 @@
 [![Tests](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/tests.yml/badge.svg)](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/tests.yml)
 
 RESTful HTTP API using Python Flask that allows users to manage their ecommerce platform.
-<br></br>
+<br>
 
 Ability to create, read, update, and delete products, categories and subcategories. A category can have multiple subcategories and a subcategory can belong to multiple categories. Products can belong to multiple categories and subcategories.
 <br></br>
@@ -11,13 +11,9 @@ Fetching a product fetches the details of categories and subcategories it belong
 <br></br>
 Paginates result when products are fetched by categories or subcategories.
 
-<br>
-<br>
-
 Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
-
-<br/>
+<br><br>
 
 ### Requirements
 This project is written in `Python 3.12.1`
@@ -71,7 +67,6 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 - [GET] `/category/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results. <br/><br/>
 - [GET] `/category/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results. <br/><br/>
 
-<br/>
 
 #### Authorization
 ``Protected`` endpoints require the following header:
@@ -79,6 +74,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 ``Refresh protected`` endpoints requires the following header:
   `Authorization: Bearer <refresh_token>`
+<br><br>
 
 #### Authentication
 - [POST] `/auth/register` - Register a new user.
