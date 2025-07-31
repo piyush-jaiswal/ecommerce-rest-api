@@ -4,6 +4,7 @@ import pytest
 
 # TODO: Fix hack. Changes the env var before initializing the db for testing
 os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+os.environ["JWT_SECRET_KEY"] = os.urandom(24).hex()
 
 from app import app, db
 
