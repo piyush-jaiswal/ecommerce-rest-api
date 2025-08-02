@@ -1,0 +1,40 @@
+name: Vercel Preview Deployment
+
+env:
+    VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+on:
+    pull_request:
+        branches: [ "master" ]
+    workflow_dispatch:
+
+concurrency:
+    group: "vercel-preview-${{ github.event.pull_request.number }}"
+    cancel-in-progress: true
+
+jobs:
+    test:
+        uses: ./.github/workflows/tests.yml
+
+    deploy-preview:
+        needs: [test]
+        runs-on: ubuntu-latest
+        # Do not run for PR from forks
+        if: github.event.pull_request.head.repo.full_name == github.repository
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install Vercel CLI
+              run: npm install --global vercel@44.6.6
+
+            - name: Pull Vercel Environment Information
+              run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+            - name: Build Project Artifacts
+              run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+            - name: Deploy Project Artifacts to Vercel
+              run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}

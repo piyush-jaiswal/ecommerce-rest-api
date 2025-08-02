@@ -4,5 +4,9 @@
       "src": "/(.*)",
       "dest": "/api/vercel_function"
     }
-  ]
+  ],
+
+  "git": {
+      "deploymentEnabled": false
+  }
 }
