@@ -20,6 +20,8 @@ jobs:
     deploy-preview:
         needs: [test]
         runs-on: ubuntu-latest
+        # Do not run for PR from forks
+        if: github.event.pull_request.head.repo.full_name == github.repository
 
         steps:
             - name: Checkout code
