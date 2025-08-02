@@ -9,6 +9,10 @@ on:
         branches: [ "master" ]
     workflow_dispatch:
 
+concurrency:
+    group: "vercel-production-${{ github.ref }}"
+    cancel-in-progress: false   # waits for the previous one to finish
+
 jobs:
     test:
         uses: ./.github/workflows/tests.yml
