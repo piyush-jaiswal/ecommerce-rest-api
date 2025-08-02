@@ -1,6 +1,7 @@
 <h1>Ecommerce REST API</h1>
 
 [![Tests](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/tests.yml/badge.svg)](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/tests.yml)
+[![Vercel Production Deployment](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/deploy_production.yml/badge.svg)](https://github.com/piyush-jaiswal/ecommerce-rest-api/actions/workflows/deploy_production.yml)
 
 RESTful HTTP API using Python Flask that allows users to manage their ecommerce platform.
 <br>
