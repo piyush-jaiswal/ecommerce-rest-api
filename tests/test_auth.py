@@ -115,8 +115,9 @@ class TestAuth:
         assert "access_token" in data
         assert "refresh_token" in data
 
-        self._assert_jwt_structure(data["access_token"], expected_sub="1", expected_type="access", fresh=True)
-        self._assert_jwt_structure(data["refresh_token"], expected_sub="1", expected_type="refresh")
+        user = self._verify_user_in_db(self.TEST_EMAIL)
+        self._assert_jwt_structure(data["access_token"], expected_sub=str(user.id), expected_type="access", fresh=True)
+        self._assert_jwt_structure(data["refresh_token"], expected_sub=str(user.id), expected_type="refresh")
 
     def test_login_invalid_password(self, register_user, login_user):
         register_user(self.TEST_EMAIL, self.TEST_PASSWORD)
@@ -143,7 +144,8 @@ class TestAuth:
         assert data["access_token"] != original_access_token
         assert "refresh_token" not in data
 
-        self._assert_jwt_structure(data["access_token"], expected_sub="1", expected_type="access")
+        user = self._verify_user_in_db(self.TEST_EMAIL)
+        self._assert_jwt_structure(data["access_token"], expected_sub=str(user.id), expected_type="access")
 
     def test_refresh_token_invalid(self, register_user, login_user):
         # Access token test
