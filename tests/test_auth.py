@@ -47,8 +47,9 @@ class TestAuth:
         assert response.status_code == 415
 
     def _decode_token(self, token):
-        return decode_token(token, allow_expired=False)
-
+        # Needs Flask app context for secret/algorithms from current_app.config
+        with self.client.application.app_context():
+            return decode_token(token, allow_expired=False)
     def _assert_jwt_structure(self, token, expected_sub, expected_type, fresh=False):
         assert token.count(".") == 2, f"Token does not have three segments: {token}"
         payload = self._decode_token(token)
