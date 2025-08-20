@@ -64,7 +64,7 @@ class TestAuth:
         expected_delta = None
         if expected_type == "access":
             expected_delta = self.ACCESS_TOKEN_DELTA
-        if expected_type == "refresh":
+        elif expected_type == "refresh":
             expected_delta = self.REFRESH_TOKEN_DELTA
 
         if expected_delta is not None:
@@ -143,7 +143,7 @@ class TestAuth:
         assert data["access_token"] != original_access_token
         assert "refresh_token" not in data
 
-        self._assert_jwt_structure(data["access_token"], expected_sub="1", expected_type="access", fresh=False)
+        self._assert_jwt_structure(data["access_token"], expected_sub="1", expected_type="access")
 
     def test_refresh_token_invalid(self, register_user, login_user):
         # Access token test
