@@ -116,23 +116,29 @@ class TestProduct:
         assert get_resp.status_code == 404
         self._verify_product_in_db("ToDelete", should_exist=False)
 
-    def test_get_product_by_name(self, create_product):
-        product_name = "Test Product With Spaces"
-        response = create_product(product_name, "A test product with spaces")
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "Test Product With Spaces And / And @",
+            "Café",
+            "C++",
+            "20% off"
+        ]
+    )
+    def test_get_product_by_name(self, create_product, name):
+        response = create_product(name, "desc")
         assert response.status_code == 201
         data = response.get_json()
         p_id = data["id"]
 
-        encoded_name = quote(product_name)
-        get_resp = self.client.get(f"/product/{encoded_name}")
+        get_resp = self.client.get("/product", query_string={"name": name})
         assert get_resp.status_code == 200
         prod_data = get_resp.get_json()
         assert prod_data["id"] == p_id
-        assert prod_data["name"] == product_name
-        assert prod_data["description"] == "A test product with spaces"
+        assert prod_data["name"] == name
+        assert prod_data["description"] == "desc"
 
-        encoded_name = quote("Non Existent Product")
-        not_found_resp = self.client.get(f"/product/{encoded_name}")
+        not_found_resp = self.client.get("/product", query_string={"name": "Non existent product"})
         assert not_found_resp.status_code == 404
 
     @pytest.mark.parametrize(
