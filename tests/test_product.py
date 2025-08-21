@@ -1,5 +1,3 @@
-from urllib.parse import quote
-
 import pytest
 
 from app.models import Product
@@ -140,6 +138,10 @@ class TestProduct:
 
         not_found_resp = self.client.get("/product", query_string={"name": "Non existent product"})
         assert not_found_resp.status_code == 404
+
+    def test_get_product_by_name_missing_param_returns_400(self):
+        resp = self.client.get("/product")  # no query param
+        assert resp.status_code == 400
 
     @pytest.mark.parametrize(
         "get_headers, expected_code",
