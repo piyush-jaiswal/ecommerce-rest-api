@@ -906,15 +906,7 @@ def get_product_by_name(name):
     product = Product.query.filter(Product.name == name).first()
     if product is None:
         abort(404)
-
-    try:
-        product_json = product.to_json()
-        subcategories = Subcategory.query.filter(Subcategory.id.in_(product_json["subcategories"]))
-        c_ids = set(c.id for sc in subcategories for c in sc.categories)
-        product_json["categories"] = list(c_ids)
-        return product_json, 200
-    except:
-        return "Error occured", 500
+    return jsonify(product.to_json()), 200
 
 
 @app.route('/products', methods=['GET'])

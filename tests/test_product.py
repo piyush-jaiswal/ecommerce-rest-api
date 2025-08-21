@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 import pytest
 
 from app.models import Product
@@ -113,6 +115,25 @@ class TestProduct:
         get_resp = self.client.get(f"/product/{p_id}")
         assert get_resp.status_code == 404
         self._verify_product_in_db("ToDelete", should_exist=False)
+
+    def test_get_product_by_name(self, create_product):
+        product_name = "Test Product With Spaces"
+        response = create_product(product_name, "A test product with spaces")
+        assert response.status_code == 201
+        data = response.get_json()
+        p_id = data["id"]
+
+        encoded_name = quote(product_name)
+        get_resp = self.client.get(f"/product/{encoded_name}")
+        assert get_resp.status_code == 200
+        prod_data = get_resp.get_json()
+        assert prod_data["id"] == p_id
+        assert prod_data["name"] == product_name
+        assert prod_data["description"] == "A test product with spaces"
+
+        encoded_name = quote("Non Existent Product")
+        not_found_resp = self.client.get(f"/product/{encoded_name}")
+        assert not_found_resp.status_code == 404
 
     @pytest.mark.parametrize(
         "get_headers, expected_code",
