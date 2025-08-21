@@ -113,111 +113,66 @@ class TestSubcategory:
         assert get_resp.status_code == 404
         self._verify_subcategory_in_db("ToDelete", should_exist=False)
 
-    def test_create_subcategory_expired_token(self):
-        headers = utils.get_expired_token_headers(self.client.application.app_context())
+    @pytest.mark.parametrize(
+        "get_headers, expected_code",
+        [
+            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
+            (lambda self: None, "authorization_required")
+        ]
+    )
+    def test_create_subcategory_token_error(self, get_headers, expected_code):
+        headers = get_headers(self)
         response = self.client.post(
-            "/subcategory/create", json={"name": "TestExpired"}, headers=headers
+            "/subcategory/create", json={"name": "CreateTokenError"}, headers=headers
         )
+        utils.verify_token_error_response(response, expected_code)
+        self._verify_subcategory_in_db("CreateTokenError", should_exist=False)
 
-        utils.verify_token_error_response(response, "token_expired")
-        self._verify_subcategory_in_db("TestExpired", should_exist=False)
-
-    def test_create_subcategory_invalid_token(self):
-        headers = utils.get_invalid_token_headers()
-        response = self.client.post(
-            "/subcategory/create", json={"name": "TestInvalid"}, headers=headers
-        )
-
-        utils.verify_token_error_response(response, "invalid_token")
-        self._verify_subcategory_in_db("TestInvalid", should_exist=False)
-
-    def test_create_subcategory_missing_token(self):
-        response = self.client.post("/subcategory/create", json={"name": "TestMissing"})
-        utils.verify_token_error_response(response, "authorization_required")
-        self._verify_subcategory_in_db("TestMissing", should_exist=False)
-
-    def test_update_subcategory_expired_token(self, create_subcategory, create_authenticated_headers):
+    @pytest.mark.parametrize(
+        "get_headers, expected_code",
+        [
+            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
+            (lambda self: None, "authorization_required")
+        ]
+    )
+    def test_update_subcategory_token_error(self, get_headers, create_subcategory, create_authenticated_headers, expected_code):
         headers = create_authenticated_headers()
-        response = create_subcategory("UpdateExpired", headers=headers)
+        response = create_subcategory("UpdateTokenError", headers=headers)
         data = response.get_json()
         sc_id = data["id"]
 
-        expired_headers = utils.get_expired_token_headers(self.client.application.app_context())
+        update_headers = get_headers(self)
         update_resp = self.client.put(
             f"/subcategory/{sc_id}/update",
             json={"name": "UpdatedName"},
-            headers=expired_headers,
+            headers=update_headers,
         )
 
-        utils.verify_token_error_response(update_resp, "token_expired")
-        self._verify_subcategory_in_db("UpdateExpired")
+        utils.verify_token_error_response(update_resp, expected_code)
+        self._verify_subcategory_in_db("UpdateTokenError")
         self._verify_subcategory_in_db("UpdatedName", should_exist=False)
 
-    def test_update_subcategory_invalid_token(self, create_subcategory, create_authenticated_headers):
+    @pytest.mark.parametrize(
+        "get_headers, expected_code",
+        [
+            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
+            (lambda self: None, "authorization_required")
+        ]
+    )
+    def test_delete_subcategory_token_error(self, get_headers, create_subcategory, create_authenticated_headers, expected_code):
         headers = create_authenticated_headers()
-        response = create_subcategory("UpdateInvalid", headers=headers)
+        response = create_subcategory("DeleteTokenError", headers=headers)
         data = response.get_json()
         sc_id = data["id"]
 
-        invalid_headers = utils.get_invalid_token_headers()
-        update_resp = self.client.put(
-            f"/subcategory/{sc_id}/update",
-            json={"name": "UpdatedName"},
-            headers=invalid_headers,
-        )
+        delete_headers = get_headers(self)
+        delete_resp = self.client.delete(f"/subcategory/{sc_id}", headers=delete_headers)
 
-        utils.verify_token_error_response(update_resp, "invalid_token")
-        self._verify_subcategory_in_db("UpdateInvalid")
-        self._verify_subcategory_in_db("UpdatedName", should_exist=False)
-
-    def test_update_subcategory_missing_token(self, create_subcategory, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        response = create_subcategory("UpdateMissing", headers=headers)
-        data = response.get_json()
-        sc_id = data["id"]
-
-        update_resp = self.client.put(
-            f"/subcategory/{sc_id}/update", json={"name": "UpdatedName"}
-        )
-
-        utils.verify_token_error_response(update_resp, "authorization_required")
-        self._verify_subcategory_in_db("UpdateMissing")
-        self._verify_subcategory_in_db("UpdatedName", should_exist=False)
-
-    def test_delete_subcategory_expired_token(self, create_subcategory, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        response = create_subcategory("DeleteExpired", headers=headers)
-        data = response.get_json()
-        sc_id = data["id"]
-
-        expired_headers = utils.get_expired_token_headers(self.client.application.app_context())
-        delete_resp = self.client.delete(f"/subcategory/{sc_id}", headers=expired_headers)
-
-        utils.verify_token_error_response(delete_resp, "token_expired")
-        self._verify_subcategory_in_db("DeleteExpired")
-
-    def test_delete_subcategory_invalid_token(self, create_subcategory, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        response = create_subcategory("DeleteInvalid", headers=headers)
-        data = response.get_json()
-        sc_id = data["id"]
-
-        invalid_headers = utils.get_invalid_token_headers()
-        delete_resp = self.client.delete(f"/subcategory/{sc_id}", headers=invalid_headers)
-
-        utils.verify_token_error_response(delete_resp, "invalid_token")
-        self._verify_subcategory_in_db("DeleteInvalid")
-
-    def test_delete_subcategory_missing_token(self, create_subcategory, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        response = create_subcategory("DeleteMissing", headers=headers)
-        data = response.get_json()
-        sc_id = data["id"]
-
-        delete_resp = self.client.delete(f"/subcategory/{sc_id}")
-
-        utils.verify_token_error_response(delete_resp, "authorization_required")
-        self._verify_subcategory_in_db("DeleteMissing")
+        utils.verify_token_error_response(delete_resp, expected_code)
+        self._verify_subcategory_in_db("DeleteTokenError")
 
     def test_get_subcategory_categories_empty(self, create_subcategory):
         response = create_subcategory("NoCatRel")
