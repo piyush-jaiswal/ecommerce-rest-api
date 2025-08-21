@@ -881,8 +881,8 @@ def delete_product(p_id):
         return "Error occured", 500
 
 
-@app.route('/product/<string:name>', methods=['GET'])
-def get_product_by_name(name):
+@app.route('/product', methods=['GET'])
+def get_product_by_name():
     """
     Get Product by Name
     ---
@@ -890,7 +890,7 @@ def get_product_by_name(name):
         - Product
     description: Get a product by name.
     parameters:
-        - in: path
+        - in: query
           name: name
           required: true
           type: string
@@ -903,18 +903,14 @@ def get_product_by_name(name):
         500:
             description: Error occurred.
     """
+    name = request.args.get('name')
+    if not name:
+        abort(400, description="Missing required query parameter 'name'")
+
     product = Product.query.filter(Product.name == name).first()
     if product is None:
         abort(404)
-
-    try:
-        product_json = product.to_json()
-        subcategories = Subcategory.query.filter(Subcategory.id.in_(product_json["subcategories"]))
-        c_ids = set(c.id for sc in subcategories for c in sc.categories)
-        product_json["categories"] = list(c_ids)
-        return product_json, 200
-    except:
-        return "Error occured", 500
+    return jsonify(product.to_json()), 200
 
 
 @app.route('/products', methods=['GET'])

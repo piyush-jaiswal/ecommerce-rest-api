@@ -115,6 +115,35 @@ class TestProduct:
         self._verify_product_in_db("ToDelete", should_exist=False)
 
     @pytest.mark.parametrize(
+        "name",
+        [
+            "Test Product With Spaces And / And @",
+            "Café",
+            "C++",
+            "20% off"
+        ]
+    )
+    def test_get_product_by_name(self, create_product, name):
+        response = create_product(name, "desc")
+        assert response.status_code == 201
+        data = response.get_json()
+        p_id = data["id"]
+
+        get_resp = self.client.get("/product", query_string={"name": name})
+        assert get_resp.status_code == 200
+        prod_data = get_resp.get_json()
+        assert prod_data["id"] == p_id
+        assert prod_data["name"] == name
+        assert prod_data["description"] == "desc"
+
+        not_found_resp = self.client.get("/product", query_string={"name": "Non existent product"})
+        assert not_found_resp.status_code == 404
+
+    def test_get_product_by_name_missing_param_returns_400(self):
+        resp = self.client.get("/product")  # no query param
+        assert resp.status_code == 400
+
+    @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
             (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
