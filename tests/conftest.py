@@ -7,6 +7,8 @@ os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 os.environ["JWT_SECRET_KEY"] = os.urandom(24).hex()
 
 from app import app, db
+from tests import utils
+
 
 
 @pytest.fixture
@@ -44,7 +46,6 @@ def create_authenticated_headers(register_user, login_user):
         register_user(email, password)
         resp = login_user(email, password)
         tokens = resp.get_json()
-        from tests import utils
         return utils.get_auth_header(tokens["access_token"])
 
     return _get_headers
