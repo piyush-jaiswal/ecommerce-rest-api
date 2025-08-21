@@ -14,16 +14,6 @@ class TestCategory:
             assert Category.query.count() == 0
 
     @pytest.fixture
-    def create_authenticated_headers(self, register_user, login_user):
-        def _get_headers(email="testuser@example.com", password="testpassword"):
-            register_user(email, password)
-            resp = login_user(email, password)
-            tokens = resp.get_json()
-            return utils.get_auth_header(tokens["access_token"])
-
-        return _get_headers
-
-    @pytest.fixture
     def create_category(self, create_authenticated_headers):
         def _create(name, headers=None):
             if headers is None:

@@ -36,3 +36,15 @@ def login_user(client):
         return client.post("/auth/login", json={"email": email, "password": password})
 
     return _login
+
+
+@pytest.fixture
+def create_authenticated_headers(register_user, login_user):
+    def _get_headers(email="testuser@example.com", password="testpassword"):
+        register_user(email, password)
+        resp = login_user(email, password)
+        tokens = resp.get_json()
+        from tests import utils
+        return utils.get_auth_header(tokens["access_token"])
+
+    return _get_headers
