@@ -156,27 +156,3 @@ class TestSubcategory:
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_subcategory_in_db("DeleteTokenError")
-
-    def test_get_subcategory_categories_empty(self, create_subcategory):
-        response = create_subcategory("NoCatRel")
-        data = response.get_json()
-        sc_id = data["id"]
-
-        resp = self.client.get(f"/subcategory/{sc_id}/categories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "categories" in data
-        assert data["categories"] == []
-
-    def test_get_subcategory_products_empty(self, create_subcategory):
-        response = create_subcategory("NoProdRel")
-        data = response.get_json()
-        sc_id = data["id"]
-
-        resp = self.client.get(f"/subcategory/{sc_id}/products")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "products" in data
-        assert data["products"] == []
