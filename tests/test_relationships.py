@@ -49,7 +49,6 @@ class TestRelationships:
         returned_ids = sorted([item["id"] for item in data[key]])
         assert returned_ids == sorted(expected_ids)
 
-
     def test_create_category_with_subcategories(self, create_category, create_subcategory):
         subcategory1 = create_subcategory("SC_A").get_json()
         subcategory2 = create_subcategory("SC_B").get_json()
