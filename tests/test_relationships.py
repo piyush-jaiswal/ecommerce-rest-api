@@ -42,11 +42,12 @@ class TestRelationships:
             assert category is not None
             return sorted({product.id for subcategory in category.subcategories for product in subcategory.products.all()})
 
-    def _assert_related_collection(self, resp, key, expected_ids=[], status_code=200):
+    def _assert_related_collection(self, resp, key, expected_ids=None, status_code=200):
         assert resp.status_code == status_code
         data = resp.get_json()
         assert key in data
         returned_ids = sorted([item["id"] for item in data[key]])
+        expected_ids = expected_ids or []
         assert returned_ids == sorted(expected_ids)
 
     def test_create_category_with_subcategories(self, create_category, create_subcategory):
