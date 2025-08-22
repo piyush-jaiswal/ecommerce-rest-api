@@ -10,7 +10,6 @@ from app import app, db
 from tests import utils
 
 
-
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
@@ -49,3 +48,46 @@ def create_authenticated_headers(register_user, login_user):
         return utils.get_auth_header(tokens["access_token"])
 
     return _get_headers
+
+
+@pytest.fixture
+def create_category(client, create_authenticated_headers):
+    def _create(name, subcategories=None, headers=None):
+        if headers is None:
+            headers = create_authenticated_headers()
+        payload = {"name": name}
+        if subcategories is not None:
+            payload["subcategories"] = subcategories
+        return client.post("/category/create", json=payload, headers=headers)
+
+    return _create
+
+
+@pytest.fixture
+def create_subcategory(client, create_authenticated_headers):
+    def _create(name, categories=None, products=None, headers=None):
+        if headers is None:
+            headers = create_authenticated_headers()
+        payload = {"name": name}
+        if categories is not None:
+            payload["categories"] = categories
+        if products is not None:
+            payload["products"] = products
+        return client.post("/subcategory/create", json=payload, headers=headers)
+
+    return _create
+
+
+@pytest.fixture
+def create_product(client, create_authenticated_headers):
+    def _create(name, description=None, subcategories=None, headers=None):
+        if headers is None:
+            headers = create_authenticated_headers()
+        payload = {"name": name}
+        if description is not None:
+            payload["description"] = description
+        if subcategories is not None:
+            payload["subcategories"] = subcategories
+        return client.post("/product/create", json=payload, headers=headers)
+
+    return _create
