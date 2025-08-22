@@ -13,17 +13,6 @@ class TestCategory:
         with client.application.app_context():
             assert Category.query.count() == 0
 
-    @pytest.fixture
-    def create_category(self, create_authenticated_headers):
-        def _create(name, headers=None):
-            if headers is None:
-                headers = create_authenticated_headers()
-            return self.client.post(
-                "/category/create", json={"name": name}, headers=headers
-            )
-
-        return _create
-
     def _count_categories(self):
         with self.client.application.app_context():
             return Category.query.count()
