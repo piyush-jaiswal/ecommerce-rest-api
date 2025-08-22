@@ -42,6 +42,14 @@ class TestRelationships:
             assert category is not None
             return sorted({product.id for subcategory in category.subcategories for product in subcategory.products.all()})
 
+    def _assert_related_collection(self, resp, key, expected_ids=[], status_code=200):
+        assert resp.status_code == status_code
+        data = resp.get_json()
+        assert key in data
+        returned_ids = sorted([item["id"] for item in data[key]])
+        assert returned_ids == sorted(expected_ids)
+
+
     def test_create_category_with_subcategories(self, create_category, create_subcategory):
         subcategory1 = create_subcategory("SC_A").get_json()
         subcategory2 = create_subcategory("SC_B").get_json()
@@ -120,11 +128,7 @@ class TestRelationships:
     def test_get_category_subcategories_empty(self, create_category):
         category = create_category("Cat_NoSC").get_json()
         resp = self.client.get(f"/category/{category['id']}/subcategories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "subcategories" in data
-        assert data["subcategories"] == []
+        self._assert_related_collection(resp, "subcategories")
 
     def test_get_category_subcategories_populated(self, create_category, create_subcategory):
         subcategory1 = create_subcategory("SC1").get_json()
@@ -132,21 +136,12 @@ class TestRelationships:
         category = create_category("Cat_WithSC", subcategories=[subcategory1["id"], subcategory2["id"]]).get_json()
 
         resp = self.client.get(f"/category/{category['id']}/subcategories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "subcategories" in data
-        returned_ids = sorted([sc["id"] for sc in data["subcategories"]])
-        assert returned_ids == sorted([subcategory1["id"], subcategory2["id"]])
+        self._assert_related_collection(resp, "subcategories", expected_ids=[subcategory1["id"], subcategory2["id"]])
 
     def test_get_category_products_empty(self, create_category):
         category = create_category("Cat_NoProd").get_json()
         resp = self.client.get(f"/category/{category['id']}/products")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "products" in data
-        assert data["products"] == []
+        self._assert_related_collection(resp, "products")
 
     def test_get_category_products_populated_with_pagination(self, create_category, create_subcategory, create_product):
         category = create_category("Cat_Prod").get_json()
@@ -168,11 +163,7 @@ class TestRelationships:
     def test_get_subcategory_categories_empty(self, create_subcategory):
         subcategory = create_subcategory("SC_NoCat").get_json()
         resp = self.client.get(f"/subcategory/{subcategory['id']}/categories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "categories" in data
-        assert data["categories"] == []
+        self._assert_related_collection(resp, "categories")
 
     def test_get_subcategory_categories_populated(self, create_category, create_subcategory):
         category1 = create_category("C1").get_json()
@@ -180,21 +171,12 @@ class TestRelationships:
         subcategory = create_subcategory("SC_Cats", categories=[category1["id"], category2["id"]]).get_json()
 
         resp = self.client.get(f"/subcategory/{subcategory['id']}/categories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "categories" in data
-        returned_ids = sorted([cat["id"] for cat in data["categories"]])
-        assert returned_ids == sorted([category1["id"], category2["id"]])
+        self._assert_related_collection(resp, "categories", expected_ids=[category1["id"], category2["id"]])
 
     def test_get_subcategory_products_empty(self, create_subcategory):
         subcategory = create_subcategory("SC_NoProd").get_json()
         resp = self.client.get(f"/subcategory/{subcategory['id']}/products")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "products" in data
-        assert data["products"] == []
+        self._assert_related_collection(resp, "products")
 
     def test_get_subcategory_products_populated_with_pagination(self, create_subcategory, create_product):
         subcategory = create_subcategory("SC_Pag").get_json()
@@ -215,11 +197,7 @@ class TestRelationships:
     def test_get_product_subcategories_empty(self, create_product):
         product = create_product("Prod_NoSC", "desc").get_json()
         resp = self.client.get(f"/product/{product['id']}/subcategories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "subcategories" in data
-        assert data["subcategories"] == []
+        self._assert_related_collection(resp, "subcategories")
 
     def test_get_product_subcategories_populated(self, create_product, create_subcategory):
         subcategory1 = create_subcategory("S1").get_json()
@@ -227,12 +205,7 @@ class TestRelationships:
         product = create_product("Prod_SC", "desc", subcategories=[subcategory1["id"], subcategory2["id"]]).get_json()
 
         resp = self.client.get(f"/product/{product['id']}/subcategories")
-
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert "subcategories" in data
-        returned_ids = sorted([sc["id"] for sc in data["subcategories"]])
-        assert returned_ids == sorted([subcategory1["id"], subcategory2["id"]])
+        self._assert_related_collection(resp, "subcategories", expected_ids=[subcategory1["id"], subcategory2["id"]])
 
     @pytest.mark.parametrize(
         "path",
