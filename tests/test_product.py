@@ -14,21 +14,6 @@ class TestProduct:
         with client.application.app_context():
             assert Product.query.count() == 0
 
-    @pytest.fixture
-    def create_product(self, create_authenticated_headers):
-        def _create(name, description=None, subcategories=None, headers=None):
-            if headers is None:
-                headers = create_authenticated_headers()
-            payload = {"name": name}
-            if description is not None:
-                payload["description"] = description
-            if subcategories is not None:
-                payload["subcategories"] = subcategories
-            return self.client.post(
-                "/product/create", json=payload, headers=headers
-            )
-        return _create
-
     def _count_products(self):
         with self.client.application.app_context():
             return Product.query.count()

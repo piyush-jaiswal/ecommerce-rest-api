@@ -13,21 +13,6 @@ class TestSubcategory:
         with client.application.app_context():
             assert Subcategory.query.count() == 0
 
-    @pytest.fixture
-    def create_subcategory(self, create_authenticated_headers):
-        def _create(name, categories=None, products=None, headers=None):
-            if headers is None:
-                headers = create_authenticated_headers()
-            payload = {"name": name}
-            if categories is not None:
-                payload["categories"] = categories
-            if products is not None:
-                payload["products"] = products
-            return self.client.post(
-                "/subcategory/create", json=payload, headers=headers
-            )
-        return _create
-
     def _count_subcategories(self):
         with self.client.application.app_context():
             return Subcategory.query.count()
@@ -58,8 +43,6 @@ class TestSubcategory:
         assert response.status_code == 500
         assert self._count_subcategories() == 1
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
-
-    # TODO: Add tests for creation with categories and products when those fixtures/utilities are available
 
     def test_get_subcategory_by_id(self, create_subcategory):
         response = create_subcategory("Laptops")
