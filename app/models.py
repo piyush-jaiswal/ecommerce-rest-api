@@ -1,11 +1,18 @@
 from datetime import datetime
 
-from sqlalchemy import Index
+from sqlalchemy import CheckConstraint, Index
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email, EmailNotValidError
 from email_normalize import normalize
 
 from app import db
+
+
+class ConstraintFactory:
+    @staticmethod
+    def non_empty_string(column_name):
+        constraint_name = f'{column_name}_non_empty'
+        return CheckConstraint(f"TRIM({column_name}) != ''", name=constraint_name)
 
 
 class User(db.Model):
@@ -15,6 +22,12 @@ class User(db.Model):
     email_normalized = db.Column(db.String(120), nullable=False, unique=True)
     password_hash = db.Column(db.String(256), nullable=False)
     created_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        ConstraintFactory.non_empty_string('email'),
+        ConstraintFactory.non_empty_string('email_normalized'),
+        ConstraintFactory.non_empty_string('password_hash')
+    )
 
     # Does not check for non-deliverable mails. Use check_deliverability or resolve for that which does DNS checks
     # For more stricter validation, use confirmation emails, or a third party API
@@ -68,6 +81,10 @@ class Category(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     subcategories = db.relationship("Subcategory", secondary=category_subcategory, back_populates="categories", lazy='dynamic', passive_deletes=True)
 
+    __table_args__ = (
+        ConstraintFactory.non_empty_string('name'),
+    )
+
     def to_json(self):
         return {
             'id': self.id,
@@ -84,6 +101,10 @@ class Subcategory(db.Model):
     categories = db.relationship("Category", secondary=category_subcategory, back_populates="subcategories", lazy='dynamic', passive_deletes=True)
     products = db.relationship("Product", secondary=subcategory_product, back_populates="subcategories", lazy='dynamic', passive_deletes=True)
 
+    __table_args__ = (
+        ConstraintFactory.non_empty_string('name'),
+    )
+
     def to_json(self):
         return {
             'id': self.id,
@@ -99,6 +120,10 @@ class Product(db.Model):
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, nullable=False ,default=datetime.utcnow)
     subcategories = db.relationship("Subcategory", secondary=subcategory_product, back_populates="products", lazy='dynamic', passive_deletes=True)
+
+    __table_args__ = (
+        ConstraintFactory.non_empty_string('name'),
+    )
 
     def to_json(self):
         return {
