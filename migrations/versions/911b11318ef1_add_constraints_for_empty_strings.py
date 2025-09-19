@@ -15,26 +15,26 @@ down_revision = '27b56cc8451c'
 branch_labels = None
 depends_on = None
 
-# migrations generated manually! Alembic did not these detect changes.
+# migrations generated manually! Alembic did not detect these changes.
 
 def upgrade():
     # User table constraints
     with op.batch_alter_table('user', schema=None) as batch_op:
-        batch_op.create_check_constraint(batch_op.f('user_email_non_empty_check'), "trim(email) <> ''")
-        batch_op.create_check_constraint(batch_op.f('user_email_normalized_non_empty_check'), "trim(email_normalized) <> ''")
-        batch_op.create_check_constraint(batch_op.f('user_password_hash_non_empty_check'), "trim(password_hash) <> ''")
+        batch_op.create_check_constraint(batch_op.f('user_email_non_empty_check'), "trim(email) != ''")
+        batch_op.create_check_constraint(batch_op.f('user_email_normalized_non_empty_check'), "trim(email_normalized) != ''")
+        batch_op.create_check_constraint(batch_op.f('user_password_hash_non_empty_check'), "trim(password_hash) != ''")
 
     # Category table constraint
     with op.batch_alter_table('category', schema=None) as batch_op:
-        batch_op.create_check_constraint(batch_op.f('category_name_non_empty_check'), "trim(name) <> ''")
+        batch_op.create_check_constraint(batch_op.f('category_name_non_empty_check'), "trim(name) != ''")
 
     # Subcategory table constraint
     with op.batch_alter_table('subcategory', schema=None) as batch_op:
-        batch_op.create_check_constraint(batch_op.f('subcategory_name_non_empty_check'), "trim(name) <> ''")
+        batch_op.create_check_constraint(batch_op.f('subcategory_name_non_empty_check'), "trim(name) != ''")
 
     # Product table constraint
     with op.batch_alter_table('product', schema=None) as batch_op:
-        batch_op.create_check_constraint(batch_op.f('product_name_non_empty_check'), "trim(name) <> ''")
+        batch_op.create_check_constraint(batch_op.f('product_name_non_empty_check'), "trim(name) != ''")
 
 
 def downgrade():
