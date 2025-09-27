@@ -8,17 +8,31 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from flasgger import Swagger
 from sqlalchemy import MetaData
+from flask_smorest import Api
+
+
+def register_blueprints():
+    from app.migrated_routes.category import bp as category_bp
+    api.register_blueprint(category_bp, url_prefix="/categories")
 
 
 app = Flask(__name__)
 
 load_dotenv()
+
+# sqlalchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# jwt
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=3)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=3)
+
+# flask-smorest
+app.config["API_TITLE"] = "Ecommerce REST API"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.2"
 
 # PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
 # https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
@@ -33,6 +47,9 @@ metadata = MetaData(naming_convention=naming_convention)
 db = SQLAlchemy(app, metadata=metadata)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
+api = Api(app)
+
+register_blueprints()
 
 
 @jwt.expired_token_loader

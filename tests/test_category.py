@@ -1,4 +1,7 @@
+import sqlite3
+
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Category
 from tests import utils
@@ -36,11 +39,15 @@ class TestCategory:
         assert "id" in data
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
-    def test_create_category_duplicate_name(self, create_category):
-        create_category(self.TEST_CATEGORY_NAME)
-        response = create_category(self.TEST_CATEGORY_NAME)
+    def test_create_category_duplicate_name(self, create_category, create_authenticated_headers):
+        headers = create_authenticated_headers()
+        create_category(self.TEST_CATEGORY_NAME, headers=headers)
 
-        assert response.status_code == 500
+        with pytest.raises(IntegrityError) as ie:
+            create_category(self.TEST_CATEGORY_NAME, headers=headers)
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
         assert self._count_categories() == 1
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
@@ -48,7 +55,7 @@ class TestCategory:
         response = create_category("Books")
         data = response.get_json()
         cat_id = data["id"]
-        get_resp = self.client.get(f"/category/{cat_id}")
+        get_resp = self.client.get(f"/categories/{cat_id}")
 
         assert get_resp.status_code == 200
         data = get_resp.get_json()
@@ -70,14 +77,14 @@ class TestCategory:
 
     def test_update_category(self, create_authenticated_headers, create_category):
         headers = create_authenticated_headers()
-        response = create_category("OldName", headers)
+        response = create_category("OldName", headers=headers)
         data = response.get_json()
         cat_id = data["id"]
         update_resp = self.client.put(
-            f"/category/{cat_id}/update", json={"name": "NewName"}, headers=headers
+            f"/categories/{cat_id}", json={"name": "NewName"}, headers=headers
         )
 
-        assert update_resp.status_code == 201
+        assert update_resp.status_code == 200
         data = update_resp.get_json()
         assert data["name"] == "NewName"
         assert data["id"] == cat_id
@@ -87,13 +94,13 @@ class TestCategory:
 
     def test_delete_category(self, create_authenticated_headers, create_category):
         headers = create_authenticated_headers()
-        response = create_category("ToDelete", headers)
+        response = create_category("ToDelete", headers=headers)
         data = response.get_json()
         cat_id = data["id"]
-        delete_resp = self.client.delete(f"/category/{cat_id}", headers=headers)
+        delete_resp = self.client.delete(f"/categories/{cat_id}", headers=headers)
 
-        assert delete_resp.status_code == 200
-        get_resp = self.client.get(f"/category/{cat_id}")
+        assert delete_resp.status_code == 204
+        get_resp = self.client.get(f"/categories/{cat_id}")
         assert get_resp.status_code == 404
         self._verify_category_in_db("ToDelete", should_exist=False)
 
@@ -108,7 +115,7 @@ class TestCategory:
     def test_create_category_token_error(self, get_headers, expected_code):
         headers = get_headers(self)
         response = self.client.post(
-            "/category/create", json={"name": "CreateTokenError"}, headers=headers
+            "/categories", json={"name": "CreateTokenError"}, headers=headers
         )
         utils.verify_token_error_response(response, expected_code)
         self._verify_category_in_db("CreateTokenError", should_exist=False)
@@ -121,15 +128,14 @@ class TestCategory:
             (lambda self: None, "authorization_required")
         ]
     )
-    def test_update_category_token_error(self, get_headers, create_category, create_authenticated_headers, expected_code):
-        headers = create_authenticated_headers()
-        response = create_category("UpdateTokenError", headers)
+    def test_update_category_token_error(self, get_headers, create_category, expected_code):
+        response = create_category("UpdateTokenError")
         data = response.get_json()
         cat_id = data["id"]
 
         update_headers = get_headers(self)
         update_resp = self.client.put(
-            f"/category/{cat_id}/update",
+            f"/categories/{cat_id}",
             json={"name": "UpdatedName"},
             headers=update_headers,
         )
@@ -146,14 +152,13 @@ class TestCategory:
             (lambda self: None, "authorization_required")
         ]
     )
-    def test_delete_category_token_error(self, get_headers, create_category, create_authenticated_headers, expected_code):
-        headers = create_authenticated_headers()
-        response = create_category("DeleteTokenError", headers)
+    def test_delete_category_token_error(self, get_headers, create_category, expected_code):
+        response = create_category("DeleteTokenError")
         data = response.get_json()
         cat_id = data["id"]
 
         delete_headers = get_headers(self)
-        delete_resp = self.client.delete(f"/category/{cat_id}", headers=delete_headers)
+        delete_resp = self.client.delete(f"/categories/{cat_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_category_in_db("DeleteTokenError")
