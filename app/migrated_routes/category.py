@@ -11,7 +11,6 @@ from app.models import (
     Product,
     Subcategory,
     category_subcategory,
-    subcategory_product,
 )
 from app.schemas import (
     CategoriesOut,
@@ -313,14 +312,9 @@ class CategoryProducts(MethodView):
             abort(404)
 
         products = (
-            Product.query.join(subcategory_product)
-            .join(
-                category_subcategory,
-                onclause=subcategory_product.c.subcategory_id
-                == category_subcategory.c.subcategory_id,
+            Product.query.filter(
+                Product.subcategories.any(Subcategory.categories.any(id=id))
             )
-            .filter(category_subcategory.c.category_id == id)
-            .distinct()
             .order_by(Product.id.asc())
             .paginate(page=page, per_page=CategoryProducts._PER_PAGE, error_out=False)
         )
