@@ -1,7 +1,9 @@
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
-from sqlalchemy import exists
+from psycopg2.errors import UniqueViolation
+from sqlalchemy import UniqueConstraint, exists
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.models import (
@@ -26,6 +28,19 @@ bp = Blueprint("category", __name__)
 @bp.route("")
 class CategoryCollection(MethodView):
     init_every_request = False
+
+    @staticmethod
+    def _get_name_unique_constraint():
+        name_col = Category.__table__.c.name
+        return next(
+            con
+            for con in Category.__table__.constraints
+            if isinstance(con, UniqueConstraint)
+            and len(con.columns) == 1
+            and con.columns.contains_column(name_col)
+        )
+
+    _NAME_UNIQUE_CONSTRAINT = _get_name_unique_constraint()
 
     @bp.response(200, CategoriesOut)
     def get(self):
@@ -88,8 +103,18 @@ class CategoryCollection(MethodView):
 
             category.subcategories = subcategories
 
-        db.session.add(category)
-        db.session.commit()
+        try:
+            db.session.add(category)
+            db.session.commit()
+        except IntegrityError as ie:
+            db.session.rollback()
+            if (
+                isinstance(ie.orig, UniqueViolation)
+                and ie.orig.diag.constraint_name
+                == CategoryCollection._NAME_UNIQUE_CONSTRAINT.name
+            ):
+                abort(409, message="Category with this name already exists")
+            raise ie
 
         return category
 
@@ -176,7 +201,18 @@ class CategoryById(MethodView):
 
             category.subcategories.extend(subcategories)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError as ie:
+            db.session.rollback()
+            if (
+                isinstance(ie.orig, UniqueViolation)
+                and ie.orig.diag.constraint_name
+                == category_subcategory.primary_key.name
+            ):
+                abort(409, message="Category and subcategory already linked")
+            raise ie
+
         return category
 
     @jwt_required()
