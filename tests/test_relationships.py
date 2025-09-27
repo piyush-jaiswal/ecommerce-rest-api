@@ -1,6 +1,6 @@
 import pytest
 
-from app.models import Category, Subcategory, Product
+from app.models import Category, Product, Subcategory
 
 
 class TestRelationships:
@@ -91,8 +91,8 @@ class TestRelationships:
         category = create_category("U_Cat", subcategories=[subcategory1["id"]]).get_json()
 
         headers = create_authenticated_headers()
-        update_response = self.client.put(f"/category/{category['id']}/update", json={"subcategories": [subcategory2["id"]]}, headers=headers)
-        assert update_response.status_code == 201
+        update_response = self.client.put(f"/categories/{category['id']}", json={"subcategories": [subcategory2["id"]]}, headers=headers)
+        assert update_response.status_code == 200
 
         assert self._category_subcategory_ids(category["id"]) == sorted([subcategory1["id"], subcategory2["id"]])
 
@@ -127,7 +127,7 @@ class TestRelationships:
 
     def test_get_category_subcategories_empty(self, create_category):
         category = create_category("Cat_NoSC").get_json()
-        resp = self.client.get(f"/category/{category['id']}/subcategories")
+        resp = self.client.get(f"/categories/{category['id']}/subcategories")
         self._assert_related_collection(resp, "subcategories")
 
     def test_get_category_subcategories_populated(self, create_category, create_subcategory):
@@ -135,12 +135,12 @@ class TestRelationships:
         subcategory2 = create_subcategory("SC2").get_json()
         category = create_category("Cat_WithSC", subcategories=[subcategory1["id"], subcategory2["id"]]).get_json()
 
-        resp = self.client.get(f"/category/{category['id']}/subcategories")
+        resp = self.client.get(f"/categories/{category['id']}/subcategories")
         self._assert_related_collection(resp, "subcategories", expected_ids=[subcategory1["id"], subcategory2["id"]])
 
     def test_get_category_products_empty(self, create_category):
         category = create_category("Cat_NoProd").get_json()
-        resp = self.client.get(f"/category/{category['id']}/products")
+        resp = self.client.get(f"/categories/{category['id']}/products")
         self._assert_related_collection(resp, "products")
 
     def test_get_category_products_populated_with_pagination(self, create_category, create_subcategory, create_product):
@@ -152,8 +152,8 @@ class TestRelationships:
             product_resp = create_product(f"P{index}", "desc", subcategories=[subcategory["id"]])
             product_ids.add(product_resp.get_json().get("id"))
 
-        page1 = self.client.get(f"/category/{category['id']}/products?page=1").get_json()
-        page2 = self.client.get(f"/category/{category['id']}/products?page=2").get_json()
+        page1 = self.client.get(f"/categories/{category['id']}/products?page=1").get_json()
+        page2 = self.client.get(f"/categories/{category['id']}/products?page=2").get_json()
         assert len(page1["products"]) == 10
         assert len(page2["products"]) == 2
 
@@ -210,8 +210,8 @@ class TestRelationships:
     @pytest.mark.parametrize(
         "path",
         [
-            "/category/999999/subcategories",
-            "/category/999999/products",
+            "/categories/999999/subcategories",
+            "/categories/999999/products",
             "/subcategory/999999/categories",
             "/subcategory/999999/products",
             "/product/999999/subcategories",

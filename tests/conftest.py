@@ -58,7 +58,7 @@ def create_category(client, create_authenticated_headers):
         payload = {"name": name}
         if subcategories is not None:
             payload["subcategories"] = subcategories
-        return client.post("/category/create", json=payload, headers=headers)
+        return client.post("/categories", json=payload, headers=headers)
 
     return _create
 
