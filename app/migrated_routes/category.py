@@ -113,7 +113,7 @@ class CategoryCollection(MethodView):
                 == CategoryCollection._NAME_UNIQUE_CONSTRAINT.name
             ):
                 abort(409, message="Category with this name already exists")
-            raise ie
+            raise
 
         return category
 
@@ -210,7 +210,7 @@ class CategoryById(MethodView):
                 == category_subcategory.primary_key.name
             ):
                 abort(409, message="Category and subcategory already linked")
-            raise ie
+            raise
 
         return category
 
