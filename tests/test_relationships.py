@@ -1,4 +1,7 @@
+import sqlite3
+
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Category, Product, Subcategory
 
@@ -95,6 +98,18 @@ class TestRelationships:
         assert update_response.status_code == 200
 
         assert self._category_subcategory_ids(category["id"]) == sorted([subcategory1["id"], subcategory2["id"]])
+
+    def test_update_category_adds_linked_subcategories(self, create_authenticated_headers, create_category, create_subcategory):
+        headers = create_authenticated_headers()
+        subcategory = create_subcategory("U_SC1", headers=headers).get_json()
+        category = create_category("U_Cat", subcategories=[subcategory["id"]], headers=headers).get_json()
+
+        with pytest.raises(IntegrityError) as ie:
+            self.client.put(f"/categories/{category['id']}", json={"subcategories": [subcategory["id"]]}, headers=headers)
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert self._category_subcategory_ids(category["id"]) == [subcategory["id"]]
 
     def test_update_subcategory_adds_categories_and_products(self, create_authenticated_headers, create_category, create_product, create_subcategory):
         category1 = create_category("UC1").get_json()
