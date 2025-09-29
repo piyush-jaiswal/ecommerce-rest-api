@@ -20,6 +20,8 @@ jobs:
     deploy-preview:
         needs: [test]
         runs-on: ubuntu-latest
+        permissions:
+          pull-requests: write
         # Do not run for PR from forks
         if: github.event.pull_request.head.repo.full_name == github.repository
 
@@ -41,8 +43,7 @@ jobs:
               run: echo "preview-url=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
 
             - name: Comment Preview URL
-              uses: thollander/actions-comment-pull-request@v3
+              uses: marocchino/sticky-pull-request-comment@v2
               with:
                 message: |
                   Preview: ${{ steps.deploy_step.outputs.preview-url }}
-                comment-tag: preview_url
