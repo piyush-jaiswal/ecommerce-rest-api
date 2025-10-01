@@ -42,6 +42,27 @@ class SubcategoriesOut(Schema):
     subcategories = fields.List(fields.Nested(SubcategoryOut))
 
 
+class SubcategoryIn(SQLAlchemySchema):
+    class Meta:
+        model = Subcategory
+
+    name = auto_field()
+    categories = fields.List(fields.Int())
+    products = fields.List(fields.Int())
+
+    @pre_load
+    def strip_strings(self, data, **kwargs):
+        if "name" in data:
+            data["name"] = data["name"].strip()
+
+        return data
+
+    @validates("name")
+    def validate_str_min_len(self, value, data_key):
+        if len(value) < 1:
+            raise ValidationError("Cannot be empty")
+
+
 class ProductOut(SQLAlchemyAutoSchema):
     class Meta:
         model = Product
