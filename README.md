@@ -64,7 +64,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 #### Fetch products using name, category, subcategory
 - [GET] `/product/<name: string>` - Get product with name: `name` <br/><br/>
-- [GET] `/subcategory/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results. <br/><br/>
+- [GET] `/subcategories/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results. <br/><br/>
 - [GET] `/categories/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results. <br/><br/>
 - [GET] `/categories/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results. <br/><br/>
 
@@ -124,11 +124,11 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 #### Subcategory
 - [GET] `/subcategories` - Get all subcategories
-- [GET] `/subcategory/(int: subcategory_id)` - Get subcategory with subcategory_id
-- [GET] `/subcategory/(int: subcategory_id)/categories` - Get categories related to subcategory_id
-- [DELETE] `/subcategory/(int: subcategory_id)` (Protected) - Delete subcategory with subcategory_id
+- [GET] `/subcategories/(int: subcategory_id)` - Get subcategory with subcategory_id
+- [GET] `/subcategories/(int: subcategory_id)/categories` - Get categories related to subcategory_id
+- [DELETE] `/subcategories/(int: subcategory_id)` (Protected) - Delete subcategory with subcategory_id
 
-- [POST] `/subcategory/create` (Protected) - Create a new subcategory
+- [POST] `/subcategories` (Protected) - Create a new subcategory
   ```
   {
     "name": "name",
@@ -137,7 +137,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
   }
   ```
 
-- [PUT] `/subcategory/(int: subcategory_id)/update` (Protected) - Update subcategory with subcategory_id
+- [PUT] `/subcategories/(int: subcategory_id)` (Protected) - Update subcategory with subcategory_id
   ```
   {
     "name": "name",

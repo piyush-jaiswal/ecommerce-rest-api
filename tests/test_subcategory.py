@@ -1,4 +1,7 @@
+import sqlite3
+
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Subcategory
 from tests import utils
@@ -36,11 +39,15 @@ class TestSubcategory:
         assert "id" in data
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
 
-    def test_create_subcategory_duplicate_name(self, create_subcategory):
-        create_subcategory(self.TEST_SUBCATEGORY_NAME)
-        response = create_subcategory(self.TEST_SUBCATEGORY_NAME)
+    def test_create_subcategory_duplicate_name(self, create_subcategory, create_authenticated_headers):
+        headers = create_authenticated_headers()
+        create_subcategory(self.TEST_SUBCATEGORY_NAME, headers=headers)
 
-        assert response.status_code == 500
+        with pytest.raises(IntegrityError) as ie:
+            create_subcategory(self.TEST_SUBCATEGORY_NAME, headers=headers)
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
         assert self._count_subcategories() == 1
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
 
@@ -48,16 +55,17 @@ class TestSubcategory:
         response = create_subcategory("Laptops")
         data = response.get_json()
         sc_id = data["id"]
-        get_resp = self.client.get(f"/subcategory/{sc_id}")
+        get_resp = self.client.get(f"/subcategories/{sc_id}")
 
         assert get_resp.status_code == 200
         data = get_resp.get_json()
         assert data["name"] == "Laptops"
         assert data["id"] == sc_id
 
-    def test_get_all_subcategories(self, create_subcategory):
-        create_subcategory("A")
-        create_subcategory("B")
+    def test_get_all_subcategories(self, create_subcategory, create_authenticated_headers):
+        headers = create_authenticated_headers()
+        create_subcategory("A", headers=headers)
+        create_subcategory("B", headers=headers)
         resp = self.client.get("/subcategories")
 
         assert resp.status_code == 200
@@ -74,10 +82,10 @@ class TestSubcategory:
         data = response.get_json()
         sc_id = data["id"]
         update_resp = self.client.put(
-            f"/subcategory/{sc_id}/update", json={"name": "NewSubcat"}, headers=headers
+            f"/subcategories/{sc_id}", json={"name": "NewSubcat"}, headers=headers
         )
 
-        assert update_resp.status_code == 201
+        assert update_resp.status_code == 200
         data = update_resp.get_json()
         assert data["name"] == "NewSubcat"
         assert data["id"] == sc_id
@@ -89,10 +97,10 @@ class TestSubcategory:
         response = create_subcategory("ToDelete", headers=headers)
         data = response.get_json()
         sc_id = data["id"]
-        delete_resp = self.client.delete(f"/subcategory/{sc_id}", headers=headers)
+        delete_resp = self.client.delete(f"/subcategories/{sc_id}", headers=headers)
 
-        assert delete_resp.status_code == 200
-        get_resp = self.client.get(f"/subcategory/{sc_id}")
+        assert delete_resp.status_code == 204
+        get_resp = self.client.get(f"/subcategories/{sc_id}")
         assert get_resp.status_code == 404
         self._verify_subcategory_in_db("ToDelete", should_exist=False)
 
@@ -107,7 +115,7 @@ class TestSubcategory:
     def test_create_subcategory_token_error(self, get_headers, expected_code):
         headers = get_headers(self)
         response = self.client.post(
-            "/subcategory/create", json={"name": "CreateTokenError"}, headers=headers
+            "/subcategories", json={"name": "CreateTokenError"}, headers=headers
         )
         utils.verify_token_error_response(response, expected_code)
         self._verify_subcategory_in_db("CreateTokenError", should_exist=False)
@@ -128,7 +136,7 @@ class TestSubcategory:
 
         update_headers = get_headers(self)
         update_resp = self.client.put(
-            f"/subcategory/{sc_id}/update",
+            f"/subcategories/{sc_id}",
             json={"name": "UpdatedName"},
             headers=update_headers,
         )
@@ -152,7 +160,7 @@ class TestSubcategory:
         sc_id = data["id"]
 
         delete_headers = get_headers(self)
-        delete_resp = self.client.delete(f"/subcategory/{sc_id}", headers=delete_headers)
+        delete_resp = self.client.delete(f"/subcategories/{sc_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_subcategory_in_db("DeleteTokenError")

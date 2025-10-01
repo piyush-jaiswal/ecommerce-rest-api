@@ -13,7 +13,10 @@ from flask_smorest import Api
 
 def register_blueprints():
     from app.migrated_routes.category import bp as category_bp
+    from app.migrated_routes.subcategory import bp as subcategory_bp
+
     api.register_blueprint(category_bp, url_prefix="/categories")
+    api.register_blueprint(subcategory_bp, url_prefix="/subcategories")
 
 
 app = Flask(__name__)
