@@ -39,12 +39,11 @@ class TestCategory:
         assert "id" in data
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
-    def test_create_category_duplicate_name(self, create_category, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        create_category(self.TEST_CATEGORY_NAME, headers=headers)
+    def test_create_category_duplicate_name(self, create_category):
+        create_category(self.TEST_CATEGORY_NAME)
 
         with pytest.raises(IntegrityError) as ie:
-            create_category(self.TEST_CATEGORY_NAME, headers=headers)
+            create_category(self.TEST_CATEGORY_NAME)
 
         assert isinstance(ie.value.orig, sqlite3.IntegrityError)
         assert "UNIQUE constraint failed" in str(ie.value.orig)
