@@ -75,12 +75,14 @@ class TestSubcategory:
         assert "B" in names
 
     def test_update_subcategory(self, create_authenticated_headers, create_subcategory):
-        headers = create_authenticated_headers()
-        response = create_subcategory("OldSubcat", headers=headers)
+        response = create_subcategory("OldSubcat")
         data = response.get_json()
         sc_id = data["id"]
+
         update_resp = self.client.put(
-            f"/subcategories/{sc_id}", json={"name": "NewSubcat"}, headers=headers
+            f"/subcategories/{sc_id}",
+            json={"name": "NewSubcat"},
+            headers=create_authenticated_headers(),
         )
 
         assert update_resp.status_code == 200
@@ -90,12 +92,34 @@ class TestSubcategory:
         self._verify_subcategory_in_db("NewSubcat")
         self._verify_subcategory_in_db("OldSubcat", should_exist=False)
 
-    def test_delete_subcategory(self, create_authenticated_headers, create_subcategory):
-        headers = create_authenticated_headers()
-        response = create_subcategory("ToDelete", headers=headers)
+    def test_update_subcategory_duplicate_name(
+        self, create_authenticated_headers, create_subcategory
+    ):
+        create_subcategory("OldSubcat")
+        response = create_subcategory("NewSubcat")
         data = response.get_json()
         sc_id = data["id"]
-        delete_resp = self.client.delete(f"/subcategories/{sc_id}", headers=headers)
+
+        with pytest.raises(IntegrityError) as ie:
+            self.client.put(
+                f"/subcategories/{sc_id}",
+                json={"name": "OldSubcat"},
+                headers=create_authenticated_headers(),
+            )
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        self._verify_subcategory_in_db("OldSubcat")
+        self._verify_subcategory_in_db("NewSubcat")
+
+    def test_delete_subcategory(self, create_authenticated_headers, create_subcategory):
+        response = create_subcategory("ToDelete")
+        data = response.get_json()
+        sc_id = data["id"]
+
+        delete_resp = self.client.delete(
+            f"/subcategories/{sc_id}", headers=create_authenticated_headers()
+        )
 
         assert delete_resp.status_code == 204
         get_resp = self.client.get(f"/subcategories/{sc_id}")

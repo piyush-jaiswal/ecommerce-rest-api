@@ -71,12 +71,14 @@ class TestProduct:
         assert "B" in names
 
     def test_update_product(self, create_authenticated_headers, create_product):
-        headers = create_authenticated_headers()
-        response = create_product("OldProduct", "OldDesc", headers=headers)
+        response = create_product("OldProduct", "OldDesc")
         data = response.get_json()
         p_id = data["id"]
+
         update_resp = self.client.put(
-            f"/product/{p_id}/update", json={"name": "NewProduct", "description": "NewDesc"}, headers=headers
+            f"/product/{p_id}/update",
+            json={"name": "NewProduct", "description": "NewDesc"},
+            headers=create_authenticated_headers(),
         )
 
         assert update_resp.status_code == 201
@@ -88,11 +90,13 @@ class TestProduct:
         self._verify_product_in_db("OldProduct", should_exist=False)
 
     def test_delete_product(self, create_authenticated_headers, create_product):
-        headers = create_authenticated_headers()
-        response = create_product("ToDelete", "desc", headers=headers)
+        response = create_product("ToDelete", "desc")
         data = response.get_json()
         p_id = data["id"]
-        delete_resp = self.client.delete(f"/product/{p_id}", headers=headers)
+
+        delete_resp = self.client.delete(
+            f"/product/{p_id}", headers=create_authenticated_headers()
+        )
 
         assert delete_resp.status_code == 200
         get_resp = self.client.get(f"/product/{p_id}")

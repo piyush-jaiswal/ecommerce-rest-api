@@ -75,12 +75,14 @@ class TestCategory:
         assert "B" in names
 
     def test_update_category(self, create_authenticated_headers, create_category):
-        headers = create_authenticated_headers()
-        response = create_category("OldName", headers=headers)
+        response = create_category("OldName")
         data = response.get_json()
         cat_id = data["id"]
+
         update_resp = self.client.put(
-            f"/categories/{cat_id}", json={"name": "NewName"}, headers=headers
+            f"/categories/{cat_id}",
+            json={"name": "NewName"},
+            headers=create_authenticated_headers(),
         )
 
         assert update_resp.status_code == 200
@@ -91,12 +93,34 @@ class TestCategory:
         self._verify_category_in_db("NewName")
         self._verify_category_in_db("OldName", should_exist=False)
 
-    def test_delete_category(self, create_authenticated_headers, create_category):
-        headers = create_authenticated_headers()
-        response = create_category("ToDelete", headers=headers)
+    def test_update_category_duplicate_name(
+        self, create_authenticated_headers, create_category
+    ):
+        create_category("OldName")
+        response = create_category("NewName")
         data = response.get_json()
         cat_id = data["id"]
-        delete_resp = self.client.delete(f"/categories/{cat_id}", headers=headers)
+
+        with pytest.raises(IntegrityError) as ie:
+            self.client.put(
+                f"/categories/{cat_id}",
+                json={"name": "OldName"},
+                headers=create_authenticated_headers(),
+            )
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        self._verify_category_in_db("OldName")
+        self._verify_category_in_db("NewName")
+
+    def test_delete_category(self, create_authenticated_headers, create_category):
+        response = create_category("ToDelete")
+        data = response.get_json()
+        cat_id = data["id"]
+
+        delete_resp = self.client.delete(
+            f"/categories/{cat_id}", headers=create_authenticated_headers()
+        )
 
         assert delete_resp.status_code == 204
         get_resp = self.client.get(f"/categories/{cat_id}")
