@@ -207,6 +207,12 @@ class CategoryById(MethodView):
             if (
                 isinstance(ie.orig, UniqueViolation)
                 and ie.orig.diag.constraint_name
+                == CategoryCollection._NAME_UNIQUE_CONSTRAINT.name
+            ):
+                abort(409, message="Category with this name already exists")
+            if (
+                isinstance(ie.orig, UniqueViolation)
+                and ie.orig.diag.constraint_name
                 == category_subcategory.primary_key.name
             ):
                 abort(409, message="Category and subcategory already linked")
