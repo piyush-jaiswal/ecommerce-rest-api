@@ -75,12 +75,14 @@ class TestCategory:
         assert "B" in names
 
     def test_update_category(self, create_authenticated_headers, create_category):
-        headers = create_authenticated_headers()
-        response = create_category("OldName", headers=headers)
+        response = create_category("OldName")
         data = response.get_json()
         cat_id = data["id"]
+
         update_resp = self.client.put(
-            f"/categories/{cat_id}", json={"name": "NewName"}, headers=headers
+            f"/categories/{cat_id}",
+            json={"name": "NewName"},
+            headers=create_authenticated_headers(),
         )
 
         assert update_resp.status_code == 200
@@ -112,11 +114,13 @@ class TestCategory:
         self._verify_category_in_db("NewName")
 
     def test_delete_category(self, create_authenticated_headers, create_category):
-        headers = create_authenticated_headers()
-        response = create_category("ToDelete", headers=headers)
+        response = create_category("ToDelete")
         data = response.get_json()
         cat_id = data["id"]
-        delete_resp = self.client.delete(f"/categories/{cat_id}", headers=headers)
+
+        delete_resp = self.client.delete(
+            f"/categories/{cat_id}", headers=create_authenticated_headers()
+        )
 
         assert delete_resp.status_code == 204
         get_resp = self.client.get(f"/categories/{cat_id}")
