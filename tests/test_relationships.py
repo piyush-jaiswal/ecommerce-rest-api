@@ -100,10 +100,10 @@ class TestRelationships:
         assert self._category_subcategory_ids(category["id"]) == sorted([subcategory1["id"], subcategory2["id"]])
 
     def test_update_category_adds_linked_subcategories(self, create_authenticated_headers, create_category, create_subcategory):
-        headers = create_authenticated_headers()
-        subcategory = create_subcategory("U_SC1", headers=headers).get_json()
-        category = create_category("U_Cat", subcategories=[subcategory["id"]], headers=headers).get_json()
+        subcategory = create_subcategory("U_SC1").get_json()
+        category = create_category("U_Cat", subcategories=[subcategory["id"]]).get_json()
 
+        headers = create_authenticated_headers()
         with pytest.raises(IntegrityError) as ie:
             self.client.put(f"/categories/{category['id']}", json={"subcategories": [subcategory["id"]]}, headers=headers)
 
@@ -112,13 +112,13 @@ class TestRelationships:
         assert self._category_subcategory_ids(category["id"]) == [subcategory["id"]]
 
     def test_update_subcategory_adds_categories_and_products(self, create_authenticated_headers, create_category, create_product, create_subcategory):
-        headers = create_authenticated_headers()
-        category1 = create_category("UC1", headers=headers).get_json()
-        category2 = create_category("UC2", headers=headers).get_json()
-        product1 = create_product("UP1", headers=headers).get_json()
-        product2 = create_product("UP2", headers=headers).get_json()
-        subcategory = create_subcategory("U_SC", headers=headers).get_json()
+        category1 = create_category("UC1").get_json()
+        category2 = create_category("UC2").get_json()
+        product1 = create_product("UP1").get_json()
+        product2 = create_product("UP2").get_json()
+        subcategory = create_subcategory("U_SC").get_json()
 
+        headers = create_authenticated_headers()
         update_response = self.client.put(
             f"/subcategories/{subcategory['id']}",
             json={"categories": [category1["id"], category2["id"]], "products": [product1["id"], product2["id"]]},
@@ -130,11 +130,11 @@ class TestRelationships:
         assert self._subcategory_product_ids(subcategory["id"]) == sorted([product1["id"], product2["id"]])
 
     def test_update_subcategory_adds_linked_categories_and_products(self, create_authenticated_headers, create_category, create_product, create_subcategory):
-        headers = create_authenticated_headers()
-        category = create_category("UC1", headers=headers).get_json()
-        product = create_product("UP1", headers=headers).get_json()
-        subcategory = create_subcategory("U_SC", categories=[category["id"]], products=[product["id"]], headers=headers).get_json()
+        category = create_category("UC1").get_json()
+        product = create_product("UP1").get_json()
+        subcategory = create_subcategory("U_SC", categories=[category["id"]], products=[product["id"]]).get_json()
 
+        headers = create_authenticated_headers()
         with pytest.raises(IntegrityError) as ie_c:
             self.client.put(
                 f"/subcategories/{subcategory['id']}",
@@ -215,11 +215,10 @@ class TestRelationships:
         resp = self.client.get(f"/subcategories/{subcategory['id']}/categories")
         self._assert_related_collection(resp, "categories")
 
-    def test_get_subcategory_categories_populated(self, create_category, create_subcategory, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        category1 = create_category("C1", headers=headers).get_json()
-        category2 = create_category("C2", headers=headers).get_json()
-        subcategory = create_subcategory("SC_Cats", categories=[category1["id"], category2["id"]], headers=headers).get_json()
+    def test_get_subcategory_categories_populated(self, create_category, create_subcategory):
+        category1 = create_category("C1").get_json()
+        category2 = create_category("C2").get_json()
+        subcategory = create_subcategory("SC_Cats", categories=[category1["id"], category2["id"]]).get_json()
 
         resp = self.client.get(f"/subcategories/{subcategory['id']}/categories")
         self._assert_related_collection(resp, "categories", expected_ids=[category1["id"], category2["id"]])
@@ -229,13 +228,12 @@ class TestRelationships:
         resp = self.client.get(f"/subcategories/{subcategory['id']}/products")
         self._assert_related_collection(resp, "products")
 
-    def test_get_subcategory_products_populated_with_pagination(self, create_subcategory, create_product, create_authenticated_headers):
-        headers = create_authenticated_headers()
-        subcategory = create_subcategory("SC_Pag", headers=headers).get_json()
+    def test_get_subcategory_products_populated_with_pagination(self, create_subcategory, create_product):
+        subcategory = create_subcategory("SC_Pag").get_json()
 
         product_ids = set()
         for index in range(11):
-            product_resp = create_product(f"SP{index}", "desc", subcategories=[subcategory["id"]], headers=headers)
+            product_resp = create_product(f"SP{index}", "desc", subcategories=[subcategory["id"]])
             product_ids.add(product_resp.get_json().get("id"))
 
         page1 = self.client.get(f"/subcategories/{subcategory['id']}/products?page=1").get_json()

@@ -152,9 +152,8 @@ class TestProduct:
             (lambda self: None, "authorization_required")
         ]
     )
-    def test_update_product_token_error(self, get_headers, create_product, create_authenticated_headers, expected_code):
-        headers = create_authenticated_headers()
-        response = create_product("UpdateTokenError", "desc", headers=headers)
+    def test_update_product_token_error(self, get_headers, create_product, expected_code):
+        response = create_product("UpdateTokenError", "desc")
         data = response.get_json()
         p_id = data["id"]
 
@@ -177,9 +176,8 @@ class TestProduct:
             (lambda self: None, "authorization_required")
         ]
     )
-    def test_delete_product_token_error(self, get_headers, create_product, create_authenticated_headers, expected_code):
-        headers = create_authenticated_headers()
-        response = create_product("DeleteTokenError", "desc", headers=headers)
+    def test_delete_product_token_error(self, get_headers, create_product, expected_code):
+        response = create_product("DeleteTokenError", "desc")
         data = response.get_json()
         p_id = data["id"]
 

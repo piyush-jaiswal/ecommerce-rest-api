@@ -42,11 +42,16 @@ def login_user(client):
 @pytest.fixture
 def create_authenticated_headers(register_user, login_user):
     def _get_headers(email="testuser@example.com", password="testpassword"):
-        register_user(email, password)
-        resp = login_user(email, password)
-        tokens = resp.get_json()
-        return utils.get_auth_header(tokens["access_token"])
+        nonlocal headers
+        if not headers:
+            register_user(email, password)
+            resp = login_user(email, password)
+            tokens = resp.get_json()
+            headers = utils.get_auth_header(tokens["access_token"])
 
+        return headers
+
+    headers = None
     return _get_headers
 
 

@@ -1,10 +1,10 @@
 import math
 
 import pytest
+from flask_jwt_extended import decode_token
 
 from app.models import User
 from tests import utils
-from flask_jwt_extended import decode_token
 
 
 class TestAuth:
@@ -50,6 +50,7 @@ class TestAuth:
         # Needs Flask app context for secret/algorithms from current_app.config
         with self.client.application.app_context():
             return decode_token(token, allow_expired=False)
+
     def _assert_jwt_structure(self, token, expected_sub, expected_type, fresh=False):
         assert token.count(".") == 2, f"Token does not have three segments: {token}"
         payload = self._decode_token(token)
