@@ -22,7 +22,7 @@ class CategoryIn(SQLAlchemySchema):
 
     @pre_load
     def strip_strings(self, data, **kwargs):
-        if "name" in data:
+        if "name" in data and data["name"] is not None:
             data["name"] = data["name"].strip()
 
         return data
@@ -52,7 +52,7 @@ class SubcategoryIn(SQLAlchemySchema):
 
     @pre_load
     def strip_strings(self, data, **kwargs):
-        if "name" in data:
+        if "name" in data and data["name"] is not None:
             data["name"] = data["name"].strip()
 
         return data
@@ -82,9 +82,9 @@ class ProductIn(SQLAlchemySchema):
 
     @pre_load
     def strip_strings(self, data, **kwargs):
-        if "name" in data:
+        if "name" in data and data["name"] is not None:
             data["name"] = data["name"].strip()
-        if "description" in data:
+        if "description" in data and data["description"] is not None:
             data["description"] = data["description"].strip()
 
         return data
