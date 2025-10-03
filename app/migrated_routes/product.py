@@ -220,8 +220,8 @@ class ProductById(MethodView):
 
         if name := data.get("name"):
             product.name = name
-        if description := data.get("description"):
-            product.description = description
+        if "description" in data:
+            product.description = data["description"]
 
         with db.session.no_autoflush:
             if sc_ids := data.get("subcategories"):
