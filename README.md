@@ -63,7 +63,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 ### Endpoints
 
 #### Fetch products using name, category, subcategory
-- [GET] `/product/<name: string>` - Get product with name: `name` <br/><br/>
+- [GET] `/products?name=<name: string>` - Get product with name: `name` <br/><br/>
 - [GET] `/subcategories/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results. <br/><br/>
 - [GET] `/categories/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results. <br/><br/>
 - [GET] `/categories/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results. <br/><br/>
@@ -151,11 +151,11 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 #### Product
 - [GET] `/products` - Get all products
-- [GET] `/product/(int: product_id)` - Get product with product_id
-- [GET] `/product/(int: product_id)/subcategories` - Get subcategories related to product_id
-- [DELETE] `/product/(int: product_id)` (Protected) - Delete product with product_id
+- [GET] `/products/(int: product_id)` - Get product with product_id
+- [GET] `/products/(int: product_id)/subcategories` - Get subcategories related to product_id
+- [DELETE] `/products/(int: product_id)` (Protected) - Delete product with product_id
 
-- [POST] `/product/create` (Protected) - Create a new product
+- [POST] `/products` (Protected) - Create a new product
   ```
   {
     "name": "name",
@@ -164,7 +164,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
   }
   ```
 
-- [PUT] `/product/(int: product_id)/update` (Protected) - Update product with product_id
+- [PUT] `/products/(int: product_id)` (Protected) - Update product with product_id
   ```
   {
     "name": "name",
