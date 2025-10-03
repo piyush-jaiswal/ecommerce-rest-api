@@ -93,6 +93,6 @@ def create_product(client, create_authenticated_headers):
             payload["description"] = description
         if subcategories is not None:
             payload["subcategories"] = subcategories
-        return client.post("/product/create", json=payload, headers=headers)
+        return client.post("/products", json=payload, headers=headers)
 
     return _create

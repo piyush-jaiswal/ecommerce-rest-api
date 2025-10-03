@@ -22,7 +22,7 @@ class CategoryIn(SQLAlchemySchema):
 
     @pre_load
     def strip_strings(self, data, **kwargs):
-        if "name" in data:
+        if "name" in data and data["name"] is not None:
             data["name"] = data["name"].strip()
 
         return data
@@ -52,7 +52,7 @@ class SubcategoryIn(SQLAlchemySchema):
 
     @pre_load
     def strip_strings(self, data, **kwargs):
-        if "name" in data:
+        if "name" in data and data["name"] is not None:
             data["name"] = data["name"].strip()
 
         return data
@@ -70,6 +70,33 @@ class ProductOut(SQLAlchemyAutoSchema):
 
 class ProductsOut(Schema):
     products = fields.List(fields.Nested(ProductOut))
+
+
+class ProductIn(SQLAlchemySchema):
+    class Meta:
+        model = Product
+
+    name = auto_field()
+    description = auto_field()
+    subcategories = fields.List(fields.Int())
+
+    @pre_load
+    def strip_strings(self, data, **kwargs):
+        if "name" in data and data["name"] is not None:
+            data["name"] = data["name"].strip()
+        if "description" in data and data["description"] is not None:
+            data["description"] = data["description"].strip()
+
+        return data
+
+    @validates("name")
+    def validate_str_min_len(self, value, data_key):
+        if len(value) < 1:
+            raise ValidationError("Cannot be empty")
+
+
+class NameArgs(Schema):
+    name = fields.Str(load_default=None)
 
 
 class PaginationArgs(Schema):
