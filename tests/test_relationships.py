@@ -170,10 +170,32 @@ class TestRelationships:
         product = create_product("UP", "desc", subcategories=[subcategory1["id"]]).get_json()
 
         headers = create_authenticated_headers()
-        update_response = self.client.put(f"/product/{product['id']}/update", json={"subcategories": [subcategory2["id"]]}, headers=headers)
-        assert update_response.status_code == 201
+        update_response = self.client.put(f"/products/{product['id']}", json={"subcategories": [subcategory2["id"]]}, headers=headers)
+        assert update_response.status_code == 200
 
         assert self._product_subcategory_ids(product["id"]) == sorted([subcategory1["id"], subcategory2["id"]])
+
+    def test_update_product_adds_linked_subcategories(
+        self, create_authenticated_headers, create_product, create_subcategory
+    ):
+        subcategory1 = create_subcategory("UPS1").get_json()
+        subcategory2 = create_subcategory("UPS2").get_json()
+        product = create_product(
+            "UP", "desc", subcategories=[subcategory1["id"], subcategory2["id"]]
+        ).get_json()
+
+        with pytest.raises(IntegrityError) as ie:
+            self.client.put(
+                f"/products/{product['id']}",
+                json={"subcategories": [subcategory1["id"]]},
+                headers=create_authenticated_headers(),
+            )
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert self._product_subcategory_ids(product["id"]) == sorted(
+            [subcategory1["id"], subcategory2["id"]]
+        )
 
     def test_get_category_subcategories_empty(self, create_category):
         category = create_category("Cat_NoSC").get_json()
@@ -246,7 +268,7 @@ class TestRelationships:
 
     def test_get_product_subcategories_empty(self, create_product):
         product = create_product("Prod_NoSC", "desc").get_json()
-        resp = self.client.get(f"/product/{product['id']}/subcategories")
+        resp = self.client.get(f"/products/{product['id']}/subcategories")
         self._assert_related_collection(resp, "subcategories")
 
     def test_get_product_subcategories_populated(self, create_product, create_subcategory):
@@ -254,7 +276,7 @@ class TestRelationships:
         subcategory2 = create_subcategory("S2").get_json()
         product = create_product("Prod_SC", "desc", subcategories=[subcategory1["id"], subcategory2["id"]]).get_json()
 
-        resp = self.client.get(f"/product/{product['id']}/subcategories")
+        resp = self.client.get(f"/products/{product['id']}/subcategories")
         self._assert_related_collection(resp, "subcategories", expected_ids=[subcategory1["id"], subcategory2["id"]])
 
     @pytest.mark.parametrize(
@@ -264,7 +286,7 @@ class TestRelationships:
             "/categories/999999/products",
             "/subcategories/999999/categories",
             "/subcategories/999999/products",
-            "/product/999999/subcategories",
+            "/products/999999/subcategories",
         ],
     )
     def test_relationship_getters_404(self, path):

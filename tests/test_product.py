@@ -1,4 +1,7 @@
+import sqlite3
+
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Product
 from tests import utils
@@ -40,9 +43,12 @@ class TestProduct:
 
     def test_create_product_duplicate_name(self, create_product):
         create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
-        response = create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
 
-        assert response.status_code == 500
+        with pytest.raises(IntegrityError) as ie:
+            create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
         assert self._count_products() == 1
         self._verify_product_in_db(self.TEST_PRODUCT_NAME)
 
@@ -50,7 +56,7 @@ class TestProduct:
         response = create_product("Pixel 6", "Google phone")
         data = response.get_json()
         p_id = data["id"]
-        get_resp = self.client.get(f"/product/{p_id}")
+        get_resp = self.client.get(f"/products/{p_id}")
 
         assert get_resp.status_code == 200
         data = get_resp.get_json()
@@ -76,12 +82,12 @@ class TestProduct:
         p_id = data["id"]
 
         update_resp = self.client.put(
-            f"/product/{p_id}/update",
+            f"/products/{p_id}",
             json={"name": "NewProduct", "description": "NewDesc"},
             headers=create_authenticated_headers(),
         )
 
-        assert update_resp.status_code == 201
+        assert update_resp.status_code == 200
         data = update_resp.get_json()
         assert data["name"] == "NewProduct"
         assert data["description"] == "NewDesc"
@@ -89,17 +95,37 @@ class TestProduct:
         self._verify_product_in_db("NewProduct")
         self._verify_product_in_db("OldProduct", should_exist=False)
 
+    def test_update_product_duplicate_name(
+        self, create_authenticated_headers, create_product
+    ):
+        create_product("OldProduct", "OldDesc")
+        response = create_product("NewProduct", "NewDesc")
+        data = response.get_json()
+        cat_id = data["id"]
+
+        with pytest.raises(IntegrityError) as ie:
+            self.client.put(
+                f"/products/{cat_id}",
+                json={"name": "OldProduct"},
+                headers=create_authenticated_headers(),
+            )
+
+        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
+        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        self._verify_product_in_db("OldProduct")
+        self._verify_product_in_db("NewProduct")
+
     def test_delete_product(self, create_authenticated_headers, create_product):
         response = create_product("ToDelete", "desc")
         data = response.get_json()
         p_id = data["id"]
 
         delete_resp = self.client.delete(
-            f"/product/{p_id}", headers=create_authenticated_headers()
+            f"/products/{p_id}", headers=create_authenticated_headers()
         )
 
-        assert delete_resp.status_code == 200
-        get_resp = self.client.get(f"/product/{p_id}")
+        assert delete_resp.status_code == 204
+        get_resp = self.client.get(f"/products/{p_id}")
         assert get_resp.status_code == 404
         self._verify_product_in_db("ToDelete", should_exist=False)
 
@@ -118,19 +144,15 @@ class TestProduct:
         data = response.get_json()
         p_id = data["id"]
 
-        get_resp = self.client.get("/product", query_string={"name": name})
+        get_resp = self.client.get("/products", query_string={"name": name})
         assert get_resp.status_code == 200
-        prod_data = get_resp.get_json()
+        prod_data = get_resp.get_json()["products"][0]
         assert prod_data["id"] == p_id
         assert prod_data["name"] == name
         assert prod_data["description"] == "desc"
 
-        not_found_resp = self.client.get("/product", query_string={"name": "Non existent product"})
-        assert not_found_resp.status_code == 404
-
-    def test_get_product_by_name_missing_param_returns_400(self):
-        resp = self.client.get("/product")  # no query param
-        assert resp.status_code == 400
+        not_found_resp = self.client.get("/products", query_string={"name": "Non existent product"})
+        assert not_found_resp.get_json()["products"] == []
 
     @pytest.mark.parametrize(
         "get_headers, expected_code",
@@ -143,7 +165,7 @@ class TestProduct:
     def test_create_product_token_error(self, get_headers, expected_code):
         headers = get_headers(self)
         response = self.client.post(
-            "/product/create", json={"name": "CreateTokenError"}, headers=headers
+            "/products", json={"name": "CreateTokenError"}, headers=headers
         )
         utils.verify_token_error_response(response, expected_code)
         self._verify_product_in_db("CreateTokenError", should_exist=False)
@@ -163,7 +185,7 @@ class TestProduct:
 
         update_headers = get_headers(self)
         update_resp = self.client.put(
-            f"/product/{p_id}/update",
+            f"/products/{p_id}",
             json={"name": "UpdatedName"},
             headers=update_headers,
         )
@@ -186,7 +208,7 @@ class TestProduct:
         p_id = data["id"]
 
         delete_headers = get_headers(self)
-        delete_resp = self.client.delete(f"/product/{p_id}", headers=delete_headers)
+        delete_resp = self.client.delete(f"/products/{p_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_product_in_db("DeleteTokenError")
@@ -195,8 +217,8 @@ class TestProduct:
         for i in range(15):
             create_product(f"Product{i}", f"Description{i}")
 
-        # Page 1
-        resp1 = self.client.get("/products?page=1")
+        # Page 1 - default
+        resp1 = self.client.get("/products")
         assert resp1.status_code == 200
         data1 = resp1.get_json()
         assert "products" in data1
