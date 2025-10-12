@@ -48,11 +48,8 @@ class User(db.Model):
         return User.query.filter_by(email_normalized=email_normalized).scalar()
     
     def set_email(self, email):
-        try:
-            self.email_normalized = self._normalize_email(email)
-            self.email = email
-        except EmailNotValidError as e:
-            raise e
+        self.email_normalized = self._normalize_email(email)
+        self.email = email
 
     def set_password(self, password):
         # scrypt stores salt with the hash, which it uses to verify the password

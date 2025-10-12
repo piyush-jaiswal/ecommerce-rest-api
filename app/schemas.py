@@ -1,7 +1,7 @@
-from marshmallow import Schema, ValidationError, fields, pre_load, validates
+from marshmallow import Schema, ValidationError, fields, pre_load, validate, validates
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, SQLAlchemySchema, auto_field
 
-from app.models import Category, Product, Subcategory
+from app.models import Category, Product, Subcategory, User
 
 
 class CategoryOut(SQLAlchemyAutoSchema):
@@ -101,3 +101,24 @@ class NameArgs(Schema):
 
 class PaginationArgs(Schema):
     page = fields.Int(load_default=1)
+
+
+# class AuthIn(Schema):
+class AuthIn(SQLAlchemySchema):
+    class Meta:
+        model = User
+
+    # email validation handled in User model
+    email = auto_field()
+    password = fields.Str(required=True, validate=validate.Length(min=1))
+
+    @pre_load
+    def strip_strings(self, data, **kwargs):
+        if "email" in data and data["email"] is not None:
+            data["email"] = data["email"].strip()
+        return data
+
+
+class AuthOut(Schema):
+    access_token = fields.Str()
+    refresh_token = fields.Str()

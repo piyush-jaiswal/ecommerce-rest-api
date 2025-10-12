@@ -12,13 +12,15 @@ from flask_smorest import Api
 
 
 def register_blueprints():
-    from app.migrated_routes.category import bp as category_bp
-    from app.migrated_routes.subcategory import bp as subcategory_bp
-    from app.migrated_routes.product import bp as product_bp
+    from app.routes.category import bp as category_bp
+    from app.routes.subcategory import bp as subcategory_bp
+    from app.routes.product import bp as product_bp
+    from app.routes.auth import bp as auth_bp
 
     api.register_blueprint(category_bp, url_prefix="/categories")
     api.register_blueprint(subcategory_bp, url_prefix="/subcategories")
     api.register_blueprint(product_bp, url_prefix="/products")
+    api.register_blueprint(auth_bp, url_prefix="/auth")
 
 
 app = Flask(__name__)
@@ -72,8 +74,6 @@ def invalid_token_callback(error):
 def missing_token_callback(error):
     return jsonify(code="authorization_required", error="JWT needed for this operation. Login, if needed."), 401
 
-
-from app import routes
 
 swagger_config = {
     'openapi': '3.0.0',
