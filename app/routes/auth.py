@@ -132,7 +132,7 @@ class Refresh(MethodView):
     """Get new access token using your refresh token."""
 
     @jwt_required(refresh=True)
-    @bp.response(200, AuthOut(partial=("access_token",)))
+    @bp.response(200, AuthOut(only=("access_token",)))
     def post(self):
         """
         Get new access token using your refresh token
