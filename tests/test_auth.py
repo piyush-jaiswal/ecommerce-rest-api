@@ -33,7 +33,7 @@ class TestAuth:
         with self.client.application.app_context():
             return User.query.count()
 
-    def _test_invalid_request_data(self, endpoint, expected_status=400):
+    def _test_invalid_request_data(self, endpoint, expected_status=422):
         response = self.client.post(endpoint, json={})
         assert response.status_code == expected_status
 
@@ -44,7 +44,7 @@ class TestAuth:
         assert response.status_code == expected_status
 
         response = self.client.post(endpoint, data="not json data")
-        assert response.status_code == 415
+        assert response.status_code == expected_status
 
     def _decode_token(self, token):
         # Needs Flask app context for secret/algorithms from current_app.config
@@ -97,7 +97,7 @@ class TestAuth:
         invalid_email = "not-an-email"
         response = register_user(invalid_email, self.TEST_PASSWORD)
 
-        assert response.status_code == 400
+        assert response.status_code == 422
         data = response.get_json()
         assert data["code"] == "invalid_email_format"
         assert "error" in data
@@ -125,7 +125,7 @@ class TestAuth:
         response = login_user(self.TEST_EMAIL, "wrongpassword")
 
         assert response.status_code == 401
-        assert b"Invalid username or password" in response.data
+        assert b"Invalid email or password" in response.data
 
     def test_login_invalid_data(self):
         self._test_invalid_request_data("/auth/login")
