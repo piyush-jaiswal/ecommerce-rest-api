@@ -97,12 +97,14 @@ class CategoryById(MethodView):
         if name := data.get("name"):
             category.name = name
 
-        if sc_ids := data.get("subcategories"):
-            subcategories = Subcategory.query.filter(Subcategory.id.in_(sc_ids)).all()
-            if len(subcategories) != len(sc_ids):
-                abort(422, message="One or more subcategories not present")
-
-            category.subcategories.extend(subcategories)
+        with db.session.no_autoflush:
+            if sc_ids := data.get("subcategories"):
+                subcategories = Subcategory.query.filter(
+                    Subcategory.id.in_(sc_ids)
+                ).all()
+                if len(subcategories) != len(sc_ids):
+                    abort(422, message="One or more subcategories not present")
+                category.subcategories.extend(subcategories)
 
         try:
             db.session.commit()
