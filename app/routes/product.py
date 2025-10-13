@@ -20,7 +20,7 @@ from app.schemas import (
     SubcategoriesOut,
 )
 
-bp = Blueprint("product", __name__)
+bp = Blueprint("Product", __name__)
 
 
 @bp.route("")
@@ -44,30 +44,14 @@ class ProductCollection(MethodView):
     def _get_by_name(self, name):
         return Product.query.filter(Product.name == name)
 
+    @bp.doc(
+        summary="Get All Products",
+        description="If name is passed, filters the result to that single product, if present",
+    )
     @bp.arguments(NameArgs, location="query", as_kwargs=True)
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
     def get(self, name, page):
-        """
-        Get All Products
-        ---
-        tags:
-            - Product
-        description: Get all products.
-        parameters:
-            - in: query
-              name: page
-              type: integer
-              default: 1
-              description: Page number
-            - in: query
-              name: name
-              type: string
-              description: Name
-        responses:
-            200:
-                description: Product by name or a paginated list of all products.
-        """
         if name is not None:
             products = self._get_by_name(name)
         else:
@@ -78,45 +62,10 @@ class ProductCollection(MethodView):
         return {"products": products}
 
     @jwt_required()
+    @bp.doc(summary="Create Product", security=[{"access_token": []}])
     @bp.arguments(ProductIn)
     @bp.response(201, ProductOut)
     def post(self, data):
-        """
-        Create Product
-        ---
-        tags:
-            - Product
-        description: Create a new product.
-        security:
-            - access_token: []
-        requestBody:
-            required: true
-            description: name - Name of the product <br> description - Description of the product (optional) <br> subcategories - Array of subcategory ids (optional)
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        required:
-                            - name
-                        properties:
-                            name:
-                                type: string
-                            description:
-                                type: string
-                            subcategories:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            201:
-                description: Product created successfully.
-            400:
-                description: Invalid input.
-            401:
-                description: Token expired, missing or invalid.
-            500:
-                description: Error occurred.
-        """
         product = Product(name=data["name"], description=data.get("description"))
 
         if sc_ids := data.get("subcategories"):
@@ -148,74 +97,16 @@ class ProductById(MethodView):
     def _get(self, id):
         return Product.query.get_or_404(id)
 
+    @bp.doc(summary="Get Product")
     @bp.response(200, ProductOut)
     def get(self, id):
-        """
-        Get Product
-        ---
-        tags:
-            - Product
-        description: Get a product by ID.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Product ID
-        responses:
-            200:
-                description: Product retrieved successfully.
-            404:
-                description: Product not found.
-        """
         return self._get(id)
 
     @jwt_required()
+    @bp.doc(summary="Update Product", security=[{"access_token": []}])
     @bp.arguments(ProductIn(partial=("name",)))
     @bp.response(200, ProductOut)
     def put(self, data, id):
-        """
-        Update Product
-        ---
-        tags:
-            - Product
-        description: Update an existing product.
-        security:
-            - access_token: []
-        consumes:
-            - application/json
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Product ID
-        requestBody:
-            required: true
-            description: name - Name of the product (optional) <br> description = Description of the product (optional) <br> subcategories - Array of subcategory ids (optional)
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            name:
-                                type: string
-                            description:
-                                type: string
-                            subcategories:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            201:
-                description: Product updated successfully.
-            400:
-                description: Invalid input.
-            404:
-                description: Product not found.
-            500:
-                description: Error occurred.
-        """
         product = self._get(id)
 
         if name := data.get("name"):
@@ -252,30 +143,9 @@ class ProductById(MethodView):
         return product
 
     @jwt_required()
+    @bp.doc(summary="Delete Product", security=[{"access_token": []}])
     @bp.response(204)
     def delete(self, id):
-        """
-        Delete Product
-        ---
-        tags:
-            - Product
-        description: Delete a product by ID.
-        security:
-            - access_token: []
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Product ID
-        responses:
-            200:
-                description: Product deleted successfully.
-            404:
-                description: Product not found.
-            500:
-                description: Error occurred.
-        """
         product = self._get(id)
         db.session.delete(product)
         db.session.commit()
@@ -285,27 +155,8 @@ class ProductById(MethodView):
 class ProductSubcategories(MethodView):
     init_every_request = False
 
+    @bp.doc(summary="Get Subcategories related to a Product")
     @bp.response(200, SubcategoriesOut)
     def get(self, id):
-        """
-        Get Subcategories related to a Product.
-        ---
-        tags:
-            - Product
-        description: Get Subcategories related to a Product.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Product ID
-        responses:
-            200:
-                description: Subcategories retrieved successfully.
-            404:
-                description: Product not found.
-            500:
-                description: Error occurred.
-        """
         product = Product.query.get_or_404(id)
         return {"subcategories": product.subcategories}

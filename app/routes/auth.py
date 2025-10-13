@@ -14,46 +14,15 @@ from app import db
 from app.models import User
 from app.schemas import AuthIn, AuthOut
 
-bp = Blueprint("auth", __name__)
+bp = Blueprint("Auth", __name__)
 
 
 @bp.route("/register")
 class Register(MethodView):
+    @bp.doc(summary="Register a new user")
     @bp.arguments(AuthIn)
     @bp.response(201)
     def post(self, data):
-        """
-        Register a new user.
-        ---
-        tags:
-            - User
-        description: Register a new user.
-        requestBody:
-            required: true
-            description: email - Email id <br> password - Password
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        required:
-                            - email
-                            - password
-                        properties:
-                            email:
-                                type: string
-                            password:
-                                type: string
-        responses:
-            201:
-                description: User registered successfully.
-            400:
-                description: Invalid input.
-            409:
-                description: Email already exists.
-            500:
-                description: Internal Server Error.
-        """
-
         user = User()
         user.set_password(data["password"])
 
@@ -74,42 +43,10 @@ class Register(MethodView):
 
 @bp.route("/login")
 class Login(MethodView):
-    """Login a user and return access & refresh tokens."""
-
+    @bp.doc(summary="Login a user")
     @bp.arguments(AuthIn)
     @bp.response(200, AuthOut)
     def post(self, data):
-        """
-        Login a user.
-        ---
-        tags:
-            - User
-        description: Login a user.
-        requestBody:
-            required: true
-            description: email - Email id <br> password - Password
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        required:
-                            - email
-                            - password
-                        properties:
-                            email:
-                                type: string
-                            password:
-                                type: string
-        responses:
-            200:
-                description: User logged in successfully.
-            400:
-                description: Invalid input.
-            401:
-                description: Invalid email or password.
-            500:
-                description: Internal Server Error.
-        """
         user = User.get(email=data["email"])
         if not user or not user.check_password(data["password"]):
             return abort(
@@ -129,26 +66,12 @@ class Login(MethodView):
 
 @bp.route("/refresh")
 class Refresh(MethodView):
-    """Get new access token using your refresh token."""
-
     @jwt_required(refresh=True)
+    @bp.doc(
+        summary="Get new access token using your refresh token",
+        security=[{"refresh_token": []}],
+    )
     @bp.response(200, AuthOut(only=("access_token",)))
     def post(self):
-        """
-        Get new access token using your refresh token
-        ---
-        tags:
-            - User
-        description: Get new access token using your refresh token.
-        security:
-            - refresh_token: []
-        responses:
-            200:
-                description: New access token.
-            401:
-                description: Token expired, missing or invalid.
-            500:
-                description: Internal Server Error.
-        """
         identity = get_jwt_identity()
         return {"access_token": create_access_token(identity=identity, fresh=False)}
