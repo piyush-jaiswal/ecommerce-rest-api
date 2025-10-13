@@ -21,7 +21,7 @@ from app.schemas import (
     SubcategoriesOut,
 )
 
-bp = Blueprint("category", __name__)
+bp = Blueprint("Category", __name__)
 
 
 @bp.route("")
@@ -41,58 +41,16 @@ class CategoryCollection(MethodView):
 
     _NAME_UNIQUE_CONSTRAINT = _get_name_unique_constraint()
 
+    @bp.doc(summary="Get All Categories")
     @bp.response(200, CategoriesOut)
     def get(self):
-        """
-        Get All Categories
-        ---
-        tags:
-            - Category
-        description: Get all categories.
-        responses:
-            200:
-                description: A list of categories.
-        """
         return {"categories": Category.query.all()}
 
     @jwt_required()
+    @bp.doc(summary="Create Category", security=[{"access_token": []}])
     @bp.arguments(CategoryIn)
     @bp.response(201, CategoryOut)
     def post(self, data):
-        """
-        Create Category
-        ---
-        tags:
-            - Category
-        description: Create a new category.
-        security:
-            - access_token: []
-        requestBody:
-            required: true
-            description: name - Name of the category <br> subcategories - Array of subcategory ids (optional)
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        required:
-                            - name
-                        properties:
-                            name:
-                                type: string
-                            subcategories:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            201:
-                description: Category created successfully.
-            400:
-                description: Invalid input.
-            401:
-                description: Token expired, missing or invalid.
-            500:
-                description: Error occurred.
-        """
         category = Category(name=data["name"])
 
         if sc_ids := data.get("subcategories"):
@@ -125,70 +83,16 @@ class CategoryById(MethodView):
     def _get(self, id):
         return Category.query.get_or_404(id)
 
+    @bp.doc(summary="Get Category")
     @bp.response(200, CategoryOut)
     def get(self, id):
-        """
-        Get Category
-        ---
-        tags:
-            - Category
-        description: Get a category by ID.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Category ID
-        responses:
-            200:
-                description: Category retrieved successfully.
-            404:
-                description: Category not found.
-        """
         return self._get(id)
 
     @jwt_required()
+    @bp.doc(summary="Update Category", security=[{"access_token": []}])
     @bp.arguments(CategoryIn(partial=("name",)))
     @bp.response(200, CategoryOut)
     def put(self, data, id):
-        """
-        Update Category
-        ---
-        tags:
-            - Category
-        description: Update an existing category.
-        security:
-            - access_token: []
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Category ID
-        requestBody:
-            required: true
-            description: name - Name of the category (optional) <br> subcategories - Array of subcategory ids
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            name:
-                                type: string
-                            subcategories:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            201:
-                description: Category updated successfully.
-            400:
-                description: Invalid input.
-            404:
-                description: Category not found.
-            500:
-                description: Error occurred.
-        """
         category = self._get(id)
         if name := data.get("name"):
             category.name = name
@@ -221,30 +125,9 @@ class CategoryById(MethodView):
         return category
 
     @jwt_required()
+    @bp.doc(summary="Delete Category", security=[{"access_token": []}])
     @bp.response(204)
     def delete(self, id):
-        """
-        Delete Category
-        ---
-        tags:
-            - Category
-        description: Delete a category by ID.
-        security:
-            - access_token: []
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Category ID
-        responses:
-            200:
-                description: Category deleted successfully.
-            404:
-                description: Category not found.
-            500:
-                description: Error occurred.
-        """
         category = self._get(id)
         db.session.delete(category)
         db.session.commit()
@@ -254,28 +137,9 @@ class CategoryById(MethodView):
 class CategorySubcategories(MethodView):
     init_every_request = False
 
+    @bp.doc(summary="Get Subcategories within a Category")
     @bp.response(200, SubcategoriesOut)
     def get(self, id):
-        """
-        Get Subcategories within a Category.
-        ---
-        tags:
-            - Category
-        description: Get Subcategories within a Category.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Category ID
-        responses:
-            200:
-                description: Subcategories retrieved successfully.
-            404:
-                description: Category not found.
-            500:
-                description: Error occurred.
-        """
         category = Category.query.get_or_404(id)
         return {"subcategories": category.subcategories}
 
@@ -285,34 +149,10 @@ class CategoryProducts(MethodView):
     init_every_request = False
     _PER_PAGE = 10
 
+    @bp.doc(summary="Get Products within a Category")
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
     def get(self, id, page):
-        """
-        Get Products within a Category.
-        ---
-        tags:
-            - Category
-        description: Get Products for a Category.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Category ID
-            - in: query
-              name: page
-              type: integer
-              default: 1
-              description: Page number
-        responses:
-            200:
-                description: Products retrieved successfully.
-            404:
-                description: Category not found.
-            500:
-                description: Error occurred.
-        """
         category_exists = db.session.query(exists().where(Category.id == id)).scalar()
         if not category_exists:
             abort(404)

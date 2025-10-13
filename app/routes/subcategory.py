@@ -22,7 +22,7 @@ from app.schemas import (
     SubcategoryOut,
 )
 
-bp = Blueprint("subcategory", __name__)
+bp = Blueprint("Subcategory", __name__)
 
 
 @bp.route("")
@@ -42,60 +42,16 @@ class SubcategoryCollection(MethodView):
 
     _NAME_UNIQUE_CONSTRAINT = _get_name_unique_constraint()
 
+    @bp.doc(summary="Get All Subcategories")
     @bp.response(200, SubcategoriesOut)
     def get(self):
-        """
-        Get All Subcategories
-        ---
-        tags:
-            - Subcategory
-        description: Get all subcategories.
-        responses:
-            200:
-                description: A list of subcategories.
-        """
         return {"subcategories": Subcategory.query.all()}
 
     @jwt_required()
+    @bp.doc(summary="Create Subcategory", security=[{"access_token": []}])
     @bp.arguments(SubcategoryIn)
     @bp.response(201, SubcategoryOut)
     def post(self, data):
-        """
-        Create Subcategory
-        ---
-        tags:
-            - Subcategory
-        description: Create a new subcategory.
-        security:
-            - access_token: []
-        requestBody:
-            required: true
-            description: name - Name of the subcategory <br> categories - Array of category ids (optional) <br> products - Array of product ids (optional)
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        required:
-                            - name
-                        properties:
-                            name:
-                                type: string
-                            categories:
-                                type: array
-                                items:
-                                    type: integer
-                            products:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            201:
-                description: Subcategory created successfully.
-            400:
-                description: Invalid input.
-            500:
-                description: Error occurred.
-        """
         subcategory = Subcategory(name=data["name"])
 
         if c_ids := data.get("categories"):
@@ -133,74 +89,16 @@ class SubcategoryById(MethodView):
     def _get(self, id):
         return Subcategory.query.get_or_404(id)
 
+    @bp.doc(summary="Get Subcategory")
     @bp.response(200, SubcategoryOut)
     def get(self, id):
-        """
-        Get Subcategory
-        ---
-        tags:
-            - Subcategory
-        description: Get a subcategory by ID.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Subcategory ID
-        responses:
-            200:
-                description: Subcategory retrieved successfully.
-            404:
-                description: Subcategory not found.
-        """
         return self._get(id)
 
     @jwt_required()
+    @bp.doc(summary="Update Subcategory", security=[{"access_token": []}])
     @bp.arguments(SubcategoryIn(partial=("name",)))
     @bp.response(200, SubcategoryOut)
     def put(self, data, id):
-        """
-        Update Subcategory
-        ---
-        tags:
-            - Subcategory
-        description: Update an existing subcategory.
-        security:
-            - access_token: []
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Subcategory ID
-        requestBody:
-            required: true
-            description: name - Name of the subcategory (optional) <br> categories - Array of category ids (optional) <br> products - Array of product ids (optional)
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            name:
-                                type: string
-                            categories:
-                                type: array
-                                items:
-                                    type: integer
-                            products:
-                                type: array
-                                items:
-                                    type: integer
-        responses:
-            200:
-                description: Subcategory updated successfully.
-            400:
-                description: Invalid input.
-            404:
-                description: Subcategory not found.
-            500:
-                description: Error occurred.
-        """
         subcategory = self._get(id)
         if name := data.get("name"):
             subcategory.name = name
@@ -244,30 +142,9 @@ class SubcategoryById(MethodView):
         return subcategory
 
     @jwt_required()
+    @bp.doc(summary="Delete Subcategory", security=[{"access_token": []}])
     @bp.response(204)
     def delete(self, id):
-        """
-        Delete Subcategory
-        ---
-        tags:
-            - Subcategory
-        description: Delete a subcategory by ID.
-        security:
-            - access_token: []
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Subcategory ID
-        responses:
-            204:
-                description: Subcategory deleted successfully.
-            404:
-                description: Subcategory not found.
-            500:
-                description: Error occurred.
-        """
         subcategory = self._get(id)
         db.session.delete(subcategory)
         db.session.commit()
@@ -277,28 +154,9 @@ class SubcategoryById(MethodView):
 class SubcategoryCategories(MethodView):
     init_every_request = False
 
+    @bp.doc(summary="Get Categories related to a Subcategory")
     @bp.response(200, CategoriesOut)
     def get(self, id):
-        """
-        Get Categories related to a Subcategory.
-        ---
-        tags:
-            - Subcategory
-        description: Get Categories related to a Subcategory.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Subcategory ID
-        responses:
-            200:
-                description: Categories retrieved successfully.
-            404:
-                description: Subcategory not found.
-            500:
-                description: Error occurred.
-        """
         subcategory = Subcategory.query.get_or_404(id)
         return {"categories": subcategory.categories}
 
@@ -308,34 +166,10 @@ class SubcategoryProducts(MethodView):
     init_every_request = False
     _PER_PAGE = 10
 
+    @bp.doc(summary="Get Products within a Subcategory")
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
     def get(self, id, page):
-        """
-        Get Products within a Subcategory.
-        ---
-        tags:
-            - Subcategory
-        description: Get products for a subcategory.
-        parameters:
-            - in: path
-              name: id
-              required: true
-              type: integer
-              description: Subcategory ID
-            - in: query
-              name: page
-              type: integer
-              default: 1
-              description: Page number
-        responses:
-            200:
-                description: Products retrieved successfully.
-            404:
-                description: Subcategory not found.
-            500:
-                description: Error occurred.
-        """
         subcategory = Subcategory.query.get_or_404(id)
 
         products = subcategory.products.order_by(Product.id.asc()).paginate(

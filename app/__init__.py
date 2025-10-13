@@ -6,7 +6,6 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
-from flasgger import Swagger
 from sqlalchemy import MetaData
 from flask_smorest import Api
 
@@ -41,6 +40,31 @@ app.config["API_TITLE"] = "Ecommerce REST API"
 app.config["API_VERSION"] = "v1"
 app.config["OPENAPI_VERSION"] = "3.0.2"
 
+# flask-smorest openapi swagger
+app.config["OPENAPI_URL_PREFIX"] = "/"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = "/"
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
+# flask-smorest Swagger UI top level authorize dialog box
+app.config["API_SPEC_OPTIONS"] = {
+    "components": {
+        "securitySchemes": {
+            "access_token": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter your JWT access token",
+            },
+            "refresh_token": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter your JWT refresh token",
+            },
+        }
+    }
+}
+
 # PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
 # https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
 naming_convention = {
@@ -73,47 +97,3 @@ def invalid_token_callback(error):
 @jwt.unauthorized_loader
 def missing_token_callback(error):
     return jsonify(code="authorization_required", error="JWT needed for this operation. Login, if needed."), 401
-
-
-swagger_config = {
-    'openapi': '3.0.0',
-    'title': 'Ecommerce REST API',
-    'version': None,
-    'termsOfService': None,
-    'description': None,
-    'specs': [
-        {
-            "endpoint": 'api_spec',
-            "route": '/api_spec.json',
-            "rule_filter": lambda rule: True,  # all in
-            "model_filter": lambda tag: True,  # all in
-        }
-    ],
-    'components': {
-        'securitySchemes': {
-            'access_token': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
-                'description': 'Enter your JWT access token'
-            },
-            'refresh_token': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
-                'description': 'Enter your JWT refresh token'
-            }
-        }
-    },
-    'specs_route': '/'
-}
-
-template = {
-    'tags': [
-        {'name': 'Category', 'description': 'Operations with categories'},
-        {'name': 'Subcategory', 'description': 'Operations with subategories'},
-        {'name': 'Product', 'description': 'Operations with products'},
-        {'name': 'User', 'description': 'Operations with users'},
-    ]
-}
-swagger = Swagger(app, template=template, config=swagger_config, merge=True)
