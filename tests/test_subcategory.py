@@ -126,13 +126,13 @@ class TestSubcategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_create_subcategory_token_error(self, get_headers, expected_code):
-        headers = get_headers(self)
+        headers = get_headers()
         response = self.client.post(
             "/subcategories", json={"name": "CreateTokenError"}, headers=headers
         )
@@ -142,9 +142,9 @@ class TestSubcategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_update_subcategory_token_error(self, get_headers, create_subcategory, expected_code):
@@ -152,7 +152,7 @@ class TestSubcategory:
         data = response.get_json()
         sc_id = data["id"]
 
-        update_headers = get_headers(self)
+        update_headers = get_headers()
         update_resp = self.client.put(
             f"/subcategories/{sc_id}",
             json={"name": "UpdatedName"},
@@ -166,9 +166,9 @@ class TestSubcategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_delete_subcategory_token_error(self, get_headers, create_subcategory, expected_code):
@@ -176,7 +176,7 @@ class TestSubcategory:
         data = response.get_json()
         sc_id = data["id"]
 
-        delete_headers = get_headers(self)
+        delete_headers = get_headers()
         delete_resp = self.client.delete(f"/subcategories/{sc_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)
