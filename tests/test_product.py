@@ -14,22 +14,19 @@ class TestProduct:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Product.query.count() == 0
+        assert Product.query.count() == 0
 
     def _count_products(self):
-        with self.client.application.app_context():
-            return Product.query.count()
+        return Product.query.count()
 
     def _verify_product_in_db(self, name, should_exist=True):
-        with self.client.application.app_context():
-            product = Product.query.filter_by(name=name).first()
-            if should_exist:
-                assert product is not None
-                assert product.name == name
-                return product
-            else:
-                assert product is None
+        product = Product.query.filter_by(name=name).first()
+        if should_exist:
+            assert product is not None
+            assert product.name == name
+            return product
+        else:
+            assert product is None
 
     def test_create_product(self, create_product):
         response = create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)

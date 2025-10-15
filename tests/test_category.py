@@ -13,22 +13,19 @@ class TestCategory:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Category.query.count() == 0
+        assert Category.query.count() == 0
 
     def _count_categories(self):
-        with self.client.application.app_context():
-            return Category.query.count()
+        return Category.query.count()
 
     def _verify_category_in_db(self, name, should_exist=True):
-        with self.client.application.app_context():
-            category = Category.query.filter_by(name=name).first()
-            if should_exist:
-                assert category is not None
-                assert category.name == name
-                return category
-            else:
-                assert category is None
+        category = Category.query.filter_by(name=name).first()
+        if should_exist:
+            assert category is not None
+            assert category.name == name
+            return category
+        else:
+            assert category is None
 
     def test_create_category(self, create_category):
         response = create_category(self.TEST_CATEGORY_NAME)

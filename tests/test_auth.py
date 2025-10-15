@@ -16,22 +16,19 @@ class TestAuth:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert User.query.count() == 0
+        assert User.query.count() == 0
 
     def _verify_user_in_db(self, email, should_exist=True):
-        with self.client.application.app_context():
-            user = User.get(email=email)
-            if should_exist:
-                assert user is not None
-                assert user.email == email
-                return user
-            else:
-                assert user is None
+        user = User.get(email=email)
+        if should_exist:
+            assert user is not None
+            assert user.email == email
+            return user
+        else:
+            assert user is None
 
     def _count_users(self):
-        with self.client.application.app_context():
-            return User.query.count()
+        return User.query.count()
 
     def _test_invalid_request_data(self, endpoint, expected_status=422):
         response = self.client.post(endpoint, json={})
@@ -47,9 +44,7 @@ class TestAuth:
         assert response.status_code == expected_status
 
     def _decode_token(self, token):
-        # Needs Flask app context for secret/algorithms from current_app.config
-        with self.client.application.app_context():
-            return decode_token(token, allow_expired=False)
+        return decode_token(token, allow_expired=False)
 
     def _assert_jwt_structure(self, token, expected_sub, expected_type, fresh=False):
         assert token.count(".") == 2, f"Token does not have three segments: {token}"

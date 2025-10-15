@@ -13,22 +13,19 @@ class TestSubcategory:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Subcategory.query.count() == 0
+        assert Subcategory.query.count() == 0
 
     def _count_subcategories(self):
-        with self.client.application.app_context():
-            return Subcategory.query.count()
+        return Subcategory.query.count()
 
     def _verify_subcategory_in_db(self, name, should_exist=True):
-        with self.client.application.app_context():
-            subcategory = Subcategory.query.filter_by(name=name).first()
-            if should_exist:
-                assert subcategory is not None
-                assert subcategory.name == name
-                return subcategory
-            else:
-                assert subcategory is None
+        subcategory = Subcategory.query.filter_by(name=name).first()
+        if should_exist:
+            assert subcategory is not None
+            assert subcategory.name == name
+            return subcategory
+        else:
+            assert subcategory is None
 
     def test_create_subcategory(self, create_subcategory):
         response = create_subcategory(self.TEST_SUBCATEGORY_NAME)
