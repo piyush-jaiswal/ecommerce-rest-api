@@ -14,12 +14,11 @@ def get_auth_header(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-def get_expired_token_headers(app_context, id=1):
-    with app_context:
-        token = create_access_token(
-            identity=str(id), expires_delta=timedelta(seconds=-1)
-        )
-        return get_auth_header(token)
+def get_expired_token_headers(id=1):
+    token = create_access_token(
+        identity=str(id), expires_delta=timedelta(seconds=-1)
+    )
+    return get_auth_header(token)
 
 
 def get_invalid_token_headers():

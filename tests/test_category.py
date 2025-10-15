@@ -127,7 +127,7 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_expired_token_headers(), "token_expired"),
             (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
             (lambda self: None, "authorization_required")
         ]
@@ -143,7 +143,7 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_expired_token_headers(), "token_expired"),
             (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
             (lambda self: None, "authorization_required")
         ]
@@ -167,7 +167,7 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
+            (lambda self: utils.get_expired_token_headers(), "token_expired"),
             (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
             (lambda self: None, "authorization_required")
         ]

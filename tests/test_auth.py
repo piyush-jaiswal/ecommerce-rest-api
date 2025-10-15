@@ -164,8 +164,6 @@ class TestAuth:
         utils.verify_token_error_response(response, "authorization_required")
 
     def test_refresh_token_expired(self):
-        expired_headers = utils.get_expired_token_headers(
-            self.client.application.app_context()
-        )
+        expired_headers = utils.get_expired_token_headers()
         response = self.client.post("/auth/refresh", headers=expired_headers)
         utils.verify_token_error_response(response, "token_expired")
