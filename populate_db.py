@@ -1,10 +1,12 @@
 from faker import Faker
-from app import app, db
+from app import create_app, db
 from app.models import Category, Subcategory, Product, category_subcategory, subcategory_product
 import random
 
 
+app = create_app()
 fake = Faker()
+
 
 def create_categories(num=5):
     categories = []
