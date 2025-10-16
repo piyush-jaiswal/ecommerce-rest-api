@@ -103,7 +103,6 @@ class PaginationArgs(Schema):
     page = fields.Int(load_default=1)
 
 
-# class AuthIn(Schema):
 class AuthIn(SQLAlchemySchema):
     class Meta:
         model = User
