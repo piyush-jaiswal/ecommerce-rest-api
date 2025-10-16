@@ -13,22 +13,19 @@ class TestCategory:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Category.query.count() == 0
+        assert Category.query.count() == 0
 
     def _count_categories(self):
-        with self.client.application.app_context():
-            return Category.query.count()
+        return Category.query.count()
 
     def _verify_category_in_db(self, name, should_exist=True):
-        with self.client.application.app_context():
-            category = Category.query.filter_by(name=name).first()
-            if should_exist:
-                assert category is not None
-                assert category.name == name
-                return category
-            else:
-                assert category is None
+        category = Category.query.filter_by(name=name).first()
+        if should_exist:
+            assert category is not None
+            assert category.name == name
+            return category
+        else:
+            assert category is None
 
     def test_create_category(self, create_category):
         response = create_category(self.TEST_CATEGORY_NAME)
@@ -130,13 +127,13 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_create_category_token_error(self, get_headers, expected_code):
-        headers = get_headers(self)
+        headers = get_headers()
         response = self.client.post(
             "/categories", json={"name": "CreateTokenError"}, headers=headers
         )
@@ -146,9 +143,9 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_update_category_token_error(self, get_headers, create_category, expected_code):
@@ -156,7 +153,7 @@ class TestCategory:
         data = response.get_json()
         cat_id = data["id"]
 
-        update_headers = get_headers(self)
+        update_headers = get_headers()
         update_resp = self.client.put(
             f"/categories/{cat_id}",
             json={"name": "UpdatedName"},
@@ -170,9 +167,9 @@ class TestCategory:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_delete_category_token_error(self, get_headers, create_category, expected_code):
@@ -180,7 +177,7 @@ class TestCategory:
         data = response.get_json()
         cat_id = data["id"]
 
-        delete_headers = get_headers(self)
+        delete_headers = get_headers()
         delete_resp = self.client.delete(f"/categories/{cat_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)

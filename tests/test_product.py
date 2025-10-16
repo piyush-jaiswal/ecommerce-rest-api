@@ -14,22 +14,19 @@ class TestProduct:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Product.query.count() == 0
+        assert Product.query.count() == 0
 
     def _count_products(self):
-        with self.client.application.app_context():
-            return Product.query.count()
+        return Product.query.count()
 
     def _verify_product_in_db(self, name, should_exist=True):
-        with self.client.application.app_context():
-            product = Product.query.filter_by(name=name).first()
-            if should_exist:
-                assert product is not None
-                assert product.name == name
-                return product
-            else:
-                assert product is None
+        product = Product.query.filter_by(name=name).first()
+        if should_exist:
+            assert product is not None
+            assert product.name == name
+            return product
+        else:
+            assert product is None
 
     def test_create_product(self, create_product):
         response = create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
@@ -157,13 +154,13 @@ class TestProduct:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_create_product_token_error(self, get_headers, expected_code):
-        headers = get_headers(self)
+        headers = get_headers()
         response = self.client.post(
             "/products", json={"name": "CreateTokenError"}, headers=headers
         )
@@ -173,9 +170,9 @@ class TestProduct:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_update_product_token_error(self, get_headers, create_product, expected_code):
@@ -183,7 +180,7 @@ class TestProduct:
         data = response.get_json()
         p_id = data["id"]
 
-        update_headers = get_headers(self)
+        update_headers = get_headers()
         update_resp = self.client.put(
             f"/products/{p_id}",
             json={"name": "UpdatedName"},
@@ -197,9 +194,9 @@ class TestProduct:
     @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
-            (lambda self: utils.get_expired_token_headers(self.client.application.app_context()), "token_expired"),
-            (lambda self: utils.get_invalid_token_headers(), "invalid_token"),
-            (lambda self: None, "authorization_required")
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required")
         ]
     )
     def test_delete_product_token_error(self, get_headers, create_product, expected_code):
@@ -207,7 +204,7 @@ class TestProduct:
         data = response.get_json()
         p_id = data["id"]
 
-        delete_headers = get_headers(self)
+        delete_headers = get_headers()
         delete_resp = self.client.delete(f"/products/{p_id}", headers=delete_headers)
 
         utils.verify_token_error_response(delete_resp, expected_code)

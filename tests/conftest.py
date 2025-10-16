@@ -1,24 +1,30 @@
-import os
-
 import pytest
 
-# TODO: Fix hack. Changes the env var before initializing the db for testing
-os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-os.environ["JWT_SECRET_KEY"] = os.urandom(24).hex()
-
-from app import app, db
+from app import create_app, db
+from config import TestingConfig
 from tests import utils
 
 
 @pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        with app.app_context():
-            db.create_all()
-        yield client
-        with app.app_context():
-            db.drop_all()
+def app():
+    app = create_app(TestingConfig)
+
+    # setup
+    app_context = app.app_context()
+    app_context.push()
+    db.create_all()
+
+    yield app
+
+    # teardown
+    db.session.remove()
+    db.drop_all()
+    app_context.pop()
+
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
 
 @pytest.fixture

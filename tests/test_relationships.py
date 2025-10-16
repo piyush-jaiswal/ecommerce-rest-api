@@ -10,40 +10,34 @@ class TestRelationships:
     @pytest.fixture(autouse=True)
     def setup(self, client):
         self.client = client
-        with client.application.app_context():
-            assert Category.query.count() == 0
-            assert Subcategory.query.count() == 0
-            assert Product.query.count() == 0
+        assert Category.query.count() == 0
+        assert Subcategory.query.count() == 0
+        assert Product.query.count() == 0
 
     def _category_subcategory_ids(self, category_id):
-        with self.client.application.app_context():
-            category = Category.query.get(category_id)
-            assert category is not None
-            return sorted([subcategory.id for subcategory in category.subcategories])
+        category = Category.query.get(category_id)
+        assert category is not None
+        return sorted([subcategory.id for subcategory in category.subcategories])
 
     def _subcategory_category_ids(self, subcategory_id):
-        with self.client.application.app_context():
-            subcategory = Subcategory.query.get(subcategory_id)
-            assert subcategory is not None
-            return sorted([category.id for category in subcategory.categories])
+        subcategory = Subcategory.query.get(subcategory_id)
+        assert subcategory is not None
+        return sorted([category.id for category in subcategory.categories])
 
     def _subcategory_product_ids(self, subcategory_id):
-        with self.client.application.app_context():
-            subcategory = Subcategory.query.get(subcategory_id)
-            assert subcategory is not None
-            return sorted([product.id for product in subcategory.products])
+        subcategory = Subcategory.query.get(subcategory_id)
+        assert subcategory is not None
+        return sorted([product.id for product in subcategory.products])
 
     def _product_subcategory_ids(self, product_id):
-        with self.client.application.app_context():
-            product = Product.query.get(product_id)
-            assert product is not None
-            return sorted([subcategory.id for subcategory in product.subcategories])
+        product = Product.query.get(product_id)
+        assert product is not None
+        return sorted([subcategory.id for subcategory in product.subcategories])
 
     def _category_product_ids_via_subcategories(self, category_id):
-        with self.client.application.app_context():
-            category = Category.query.get(category_id)
-            assert category is not None
-            return sorted({product.id for subcategory in category.subcategories for product in subcategory.products.all()})
+        category = Category.query.get(category_id)
+        assert category is not None
+        return sorted({product.id for subcategory in category.subcategories for product in subcategory.products.all()})
 
     def _assert_related_collection(self, resp, key, expected_ids=None, status_code=200):
         assert resp.status_code == status_code

@@ -1,99 +1,28 @@
-import os
-from datetime import timedelta
+from flask import Flask
 
-from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-from sqlalchemy import MetaData
-from flask_smorest import Api
+from app.extensions import api, db, jwt, migrate
+from config import DevelopmentConfig
 
 
-def register_blueprints():
-    from app.routes.category import bp as category_bp
-    from app.routes.subcategory import bp as subcategory_bp
-    from app.routes.product import bp as product_bp
+def create_app(config_class=DevelopmentConfig):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    # initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+    api.init_app(app)
+
+    # register blueprints
     from app.routes.auth import bp as auth_bp
+    from app.routes.category import bp as category_bp
+    from app.routes.product import bp as product_bp
+    from app.routes.subcategory import bp as subcategory_bp
 
     api.register_blueprint(category_bp, url_prefix="/categories")
     api.register_blueprint(subcategory_bp, url_prefix="/subcategories")
     api.register_blueprint(product_bp, url_prefix="/products")
     api.register_blueprint(auth_bp, url_prefix="/auth")
 
-
-app = Flask(__name__)
-
-load_dotenv()
-
-# sqlalchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# jwt
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=3)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=3)
-
-# flask-smorest
-app.config["API_TITLE"] = "Ecommerce REST API"
-app.config["API_VERSION"] = "v1"
-app.config["OPENAPI_VERSION"] = "3.0.2"
-
-# flask-smorest openapi swagger
-app.config["OPENAPI_URL_PREFIX"] = "/"
-app.config["OPENAPI_SWAGGER_UI_PATH"] = "/"
-app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-
-# flask-smorest Swagger UI top level authorize dialog box
-app.config["API_SPEC_OPTIONS"] = {
-    "components": {
-        "securitySchemes": {
-            "access_token": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-                "description": "Enter your JWT access token",
-            },
-            "refresh_token": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-                "description": "Enter your JWT refresh token",
-            },
-        }
-    }
-}
-
-# PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
-# https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
-naming_convention = {
-    "ix": "%(table_name)s_%(column_0_name)s_idx",       # Indexes
-    "uq": "%(table_name)s_%(column_0_name)s_key",       # Unique constraints
-    "ck": "%(table_name)s_%(constraint_name)s_check",   # Check constraints
-    "fk": "%(table_name)s_%(column_0_name)s_fkey",      # Foreign keys
-    "pk": "%(table_name)s_pkey"                         # Primary keys
-}
-metadata = MetaData(naming_convention=naming_convention)
-db = SQLAlchemy(app, metadata=metadata)
-migrate = Migrate(app, db)
-jwt = JWTManager(app)
-api = Api(app)
-
-register_blueprints()
-
-
-@jwt.expired_token_loader
-def expired_token_callback(jwt_header, jwt_payload):
-    err = "Access token expired. Use your refresh token to get a new one."
-    if jwt_payload['type'] == 'refresh':
-        err = "Refresh token expired. Please login again."
-    return jsonify(code="token_expired", error=err), 401
-
-@jwt.invalid_token_loader
-def invalid_token_callback(error):
-    return jsonify(code="invalid_token", error="Invalid token provided."), 401
-
-@jwt.unauthorized_loader
-def missing_token_callback(error):
-    return jsonify(code="authorization_required", error="JWT needed for this operation. Login, if needed."), 401
+    return app
