@@ -218,8 +218,9 @@ class TestRelationships:
             product_resp = create_product(f"P{index}", "desc", subcategories=[subcategory["id"]])
             product_ids.add(product_resp.get_json().get("id"))
 
-        page1 = self.client.get(f"/categories/{category['id']}/products?page=1").get_json()
-        page2 = self.client.get(f"/categories/{category['id']}/products?page=2").get_json()
+        page1 = self.client.get(f"/categories/{category['id']}/products").get_json()
+        next_cursor = page1["cursor"]["next"]
+        page2 = self.client.get(f"/categories/{category['id']}/products?cursor={next_cursor}").get_json()
         assert len(page1["products"]) == 10
         assert len(page2["products"]) == 2
 
@@ -253,7 +254,8 @@ class TestRelationships:
             product_ids.add(product_resp.get_json().get("id"))
 
         page1 = self.client.get(f"/subcategories/{subcategory['id']}/products?page=1").get_json()
-        page2 = self.client.get(f"/subcategories/{subcategory['id']}/products?page=2").get_json()
+        next_cursor = page1["cursor"]["next"]
+        page2 = self.client.get(f"/subcategories/{subcategory['id']}/products?cursor={next_cursor}").get_json()
         assert len(page1["products"]) == 10
         assert len(page2["products"]) == 1
 

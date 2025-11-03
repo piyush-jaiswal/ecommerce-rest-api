@@ -222,7 +222,8 @@ class TestProduct:
         assert len(data1["products"]) == 10
 
         # Page 2
-        resp2 = self.client.get("/products?page=2")
+        next_cursor = data1["cursor"]["next"]
+        resp2 = self.client.get(f"/products?cursor={next_cursor}")
         assert resp2.status_code == 200
         data2 = resp2.get_json()
         assert "products" in data2
