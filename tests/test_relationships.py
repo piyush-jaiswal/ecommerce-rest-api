@@ -253,7 +253,7 @@ class TestRelationships:
             product_resp = create_product(f"SP{index}", "desc", subcategories=[subcategory["id"]])
             product_ids.add(product_resp.get_json().get("id"))
 
-        page1 = self.client.get(f"/subcategories/{subcategory['id']}/products?page=1").get_json()
+        page1 = self.client.get(f"/subcategories/{subcategory['id']}/products").get_json()
         next_cursor = page1["cursor"]["next"]
         page2 = self.client.get(f"/subcategories/{subcategory['id']}/products?cursor={next_cursor}").get_json()
         assert len(page1["products"]) == 10
