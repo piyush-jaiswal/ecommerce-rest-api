@@ -1,7 +1,36 @@
+import base64
+
 from marshmallow import Schema, ValidationError, fields, pre_load, validate, validates
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, SQLAlchemySchema, auto_field
+from sqlakeyset import BadBookmark, unserialize_bookmark
 
 from app.models import Category, Product, Subcategory, User
+
+
+class Cursor(fields.Field[dict]):
+    def _serialize(self, paging, attr, obj, **kwargs):
+        def encode(s):
+            bytes = s.encode("utf-8")
+            return base64.urlsafe_b64encode(bytes).decode("utf-8")
+
+        if paging is None:
+            return None
+
+        return {
+            "next": encode(paging.bookmark_next) if paging.has_next else None,
+            "prev": encode(paging.bookmark_previous) if paging.has_previous else None,
+        }
+
+    def _deserialize(self, cursor, attr, data, **kwargs):
+        if cursor is None:
+            return None
+
+        try:
+            decoded_bytes = base64.urlsafe_b64decode(cursor.encode("utf-8"))
+            marker_serialized = decoded_bytes.decode("utf-8")
+            return unserialize_bookmark(marker_serialized)
+        except (TypeError, ValueError, KeyError, BadBookmark) as ex:
+            raise ValidationError("Invalid cursor") from ex
 
 
 class CategoryOut(SQLAlchemyAutoSchema):
@@ -70,6 +99,7 @@ class ProductOut(SQLAlchemyAutoSchema):
 
 class ProductsOut(Schema):
     products = fields.List(fields.Nested(ProductOut))
+    cursor = Cursor(required=False)  # require false for getting product by name
 
 
 class ProductIn(SQLAlchemySchema):
@@ -100,7 +130,7 @@ class NameArgs(Schema):
 
 
 class PaginationArgs(Schema):
-    page = fields.Int(load_default=1)
+    cursor = Cursor(load_default=None)
 
 
 class AuthIn(SQLAlchemySchema):

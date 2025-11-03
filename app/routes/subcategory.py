@@ -2,6 +2,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 from psycopg2.errors import UniqueViolation
+from sqlakeyset import get_page
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import IntegrityError
 
@@ -169,11 +170,9 @@ class SubcategoryProducts(MethodView):
     @bp.doc(summary="Get Products within a Subcategory")
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
-    def get(self, id, page):
+    def get(self, id, cursor):
         subcategory = Subcategory.query.get_or_404(id)
+        products = subcategory.products.order_by(Product.id.asc())
+        page = get_page(products, per_page=SubcategoryProducts._PER_PAGE, page=cursor)
 
-        products = subcategory.products.order_by(Product.id.asc()).paginate(
-            page=page, per_page=SubcategoryProducts._PER_PAGE, error_out=False
-        )
-
-        return {"products": products}
+        return {"products": page, "cursor": page.paging}
