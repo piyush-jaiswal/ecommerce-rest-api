@@ -10,7 +10,7 @@ Ability to create, read, update, and delete products, categories and subcategori
 <br></br>
 Fetching a product fetches the details of categories and subcategories it belongs to. Provides the ability to search for products by name, category and subcategories.
 <br></br>
-Paginates result when products are fetched by categories or subcategories.
+Paginates result using cursor based pagination when products are fetched by categories, subcategories or themselves.
 
 Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
@@ -64,9 +64,10 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 #### Fetch products using name, category, subcategory
 - [GET] `/products?name=<name: string>` - Get product with name: `name` <br/><br/>
-- [GET] `/subcategories/<subcategory_id: int>/products?page=<page_no>` - Get product with within subcategory `subcategory`. Returns `page_no` of the paginated results. <br/><br/>
-- [GET] `/categories/<category_id: int>/products` - Get product with within category `category`. Returns first page of the paginated results. <br/><br/>
-- [GET] `/categories/<category_id: int>/products?page=<page_no>` - Get product with within category `category`. Returns `page_no` of the paginated results. <br/><br/>
+- [GET] `/subcategories/<subcategory_id: int>/products` - Get first page of products within subcategory `subcategory_id`. <br/><br/>
+- [GET] `/subcategories/<subcategory_id: int>/products?cursor=<cursor: str>` - Get products paginated using cursor within subcategory `subcategory_id`. Next and previous page `cursors` provided in responses. <br/><br/>
+- [GET] `/categories/<category_id: int>/products` - Get first page of products within category `category_id`. <br/><br/>
+- [GET] `/categories/<category_id: int>/products?cursor=<cursor: str>` - Get products paginated using cursor within category `category_id`. Next and previous page `cursors` provided in responses. <br/><br/>
 
 
 #### Authorization
@@ -150,7 +151,8 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 <br/>
 
 #### Product
-- [GET] `/products` - Get all products
+- [GET] `/products` - Get first page of products
+- [GET] `/products?cursor=<cursor: str>` - Get products paginated using cursor. Next and previous page `cursors` provided in responses.
 - [GET] `/products/(int: product_id)` - Get product with product_id
 - [GET] `/products/(int: product_id)/subcategories` - Get subcategories related to product_id
 - [DELETE] `/products/(int: product_id)` (Protected) - Delete product with product_id
