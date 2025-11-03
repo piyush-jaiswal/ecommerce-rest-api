@@ -2,6 +2,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 from psycopg2.errors import UniqueViolation
+from sqlakeyset import get_page
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.exc import IntegrityError
 
@@ -51,15 +52,14 @@ class ProductCollection(MethodView):
     @bp.arguments(NameArgs, location="query", as_kwargs=True)
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
-    def get(self, name, page):
+    def get(self, name, cursor):
         if name is not None:
             products = self._get_by_name(name)
+            return {"products": products}
         else:
-            products = Product.query.order_by(Product.id.asc()).paginate(
-                page=page, per_page=ProductCollection._PER_PAGE, error_out=False
-            )
-
-        return {"products": products}
+            products = Product.query.order_by(Product.id.asc())
+            page = get_page(products, per_page=ProductCollection._PER_PAGE, page=cursor)
+            return {"products": page, "cursor": page.paging}
 
     @jwt_required()
     @bp.doc(summary="Create Product", security=[{"access_token": []}])
