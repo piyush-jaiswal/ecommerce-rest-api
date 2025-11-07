@@ -7,6 +7,7 @@ from config import DevelopmentConfig
 def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.url_map.strict_slashes = False
 
     # initialize extensions
     db.init_app(app)
