@@ -24,7 +24,7 @@ from app.schemas import (
 bp = Blueprint("Product", __name__)
 
 
-@bp.route("")
+@bp.route("/")
 class ProductCollection(MethodView):
     init_every_request = False
     _PER_PAGE = 10

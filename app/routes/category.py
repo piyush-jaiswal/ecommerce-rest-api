@@ -25,7 +25,7 @@ from app.schemas import (
 bp = Blueprint("Category", __name__)
 
 
-@bp.route("")
+@bp.route("/")
 class CategoryCollection(MethodView):
     init_every_request = False
 
