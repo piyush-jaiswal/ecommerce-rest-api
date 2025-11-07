@@ -220,6 +220,8 @@ class TestProduct:
         data1 = resp1.get_json()
         assert "products" in data1
         assert len(data1["products"]) == 10
+        assert data1["cursor"]["prev"] is None
+        assert isinstance(data1["cursor"]["next"], str)
 
         # Page 2
         next_cursor = data1["cursor"]["next"]
@@ -228,3 +230,5 @@ class TestProduct:
         data2 = resp2.get_json()
         assert "products" in data2
         assert len(data2["products"]) == 5
+        assert data2["cursor"]["next"] is None
+        assert isinstance(data2["cursor"]["prev"], str)
