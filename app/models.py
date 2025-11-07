@@ -82,13 +82,6 @@ class Category(db.Model):
         ConstraintFactory.non_empty_string('name'),
     )
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created_at': self.created_at,
-        }
-
 
 class Subcategory(db.Model):
     __tablename__ = 'subcategory'
@@ -102,13 +95,6 @@ class Subcategory(db.Model):
         ConstraintFactory.non_empty_string('name'),
     )
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created_at': self.created_at,
-        }
-
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -121,11 +107,3 @@ class Product(db.Model):
     __table_args__ = (
         ConstraintFactory.non_empty_string('name'),
     )
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'created_at': self.created_at,
-        }
