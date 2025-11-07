@@ -221,7 +221,7 @@ class TestProduct:
         assert "products" in data1
         assert len(data1["products"]) == 10
         assert data1["cursor"]["prev"] is None
-        assert type(data1["cursor"]["next"]) is str
+        assert isinstance(data1["cursor"]["next"], str)
 
         # Page 2
         next_cursor = data1["cursor"]["next"]
@@ -231,4 +231,4 @@ class TestProduct:
         assert "products" in data2
         assert len(data2["products"]) == 5
         assert data2["cursor"]["next"] is None
-        assert type(data2["cursor"]["prev"]) is str
+        assert isinstance(data2["cursor"]["prev"], str)

@@ -225,7 +225,7 @@ class TestRelationships:
         next_cursor = page1["cursor"]["next"]
         page2 = self.client.get(f"/categories/{category['id']}/products?cursor={next_cursor}").get_json()
         assert page2["cursor"]["next"] is None
-        assert type(page2["cursor"]["prev"]) is str
+        assert isinstance(page2["cursor"]["prev"], str)
         assert len(page1["products"]) == 10
         assert len(page2["products"]) == 2
 
@@ -265,7 +265,7 @@ class TestRelationships:
         next_cursor = page1["cursor"]["next"]
         page2 = self.client.get(f"/subcategories/{subcategory['id']}/products?cursor={next_cursor}").get_json()
         assert page2["cursor"]["next"] is None
-        assert type(page2["cursor"]["prev"]) is str
+        assert isinstance(page2["cursor"]["prev"], str)
         assert len(page1["products"]) == 10
         assert len(page2["products"]) == 1
 
