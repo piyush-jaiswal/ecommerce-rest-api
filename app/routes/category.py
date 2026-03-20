@@ -165,4 +165,4 @@ class CategoryProducts(MethodView):
         ).order_by(Product.id.asc())
         page = get_page(products, per_page=CategoryProducts._PER_PAGE, page=cursor)
 
-        return { "products": page, "cursor": page.paging }
+        return {"products": page, "cursor": page.paging}

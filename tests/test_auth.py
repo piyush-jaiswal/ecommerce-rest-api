@@ -10,8 +10,8 @@ from tests import utils
 class TestAuth:
     TEST_EMAIL = "testuser@example.com"
     TEST_PASSWORD = "testpassword"
-    ACCESS_TOKEN_DELTA = 10800      # 3 hours in seconds
-    REFRESH_TOKEN_DELTA = 259200    # 3 days in seconds
+    ACCESS_TOKEN_DELTA = 10800  # 3 hours in seconds
+    REFRESH_TOKEN_DELTA = 259200  # 3 days in seconds
 
     @pytest.fixture(autouse=True)
     def setup(self, client):
@@ -112,8 +112,15 @@ class TestAuth:
         assert "refresh_token" in data
 
         user = self._verify_user_in_db(self.TEST_EMAIL)
-        self._assert_jwt_structure(data["access_token"], expected_sub=str(user.id), expected_type="access", fresh=True)
-        self._assert_jwt_structure(data["refresh_token"], expected_sub=str(user.id), expected_type="refresh")
+        self._assert_jwt_structure(
+            data["access_token"],
+            expected_sub=str(user.id),
+            expected_type="access",
+            fresh=True,
+        )
+        self._assert_jwt_structure(
+            data["refresh_token"], expected_sub=str(user.id), expected_type="refresh"
+        )
 
     def test_login_invalid_password(self, register_user, login_user):
         register_user(self.TEST_EMAIL, self.TEST_PASSWORD)
@@ -141,7 +148,9 @@ class TestAuth:
         assert "refresh_token" not in data
 
         user = self._verify_user_in_db(self.TEST_EMAIL)
-        self._assert_jwt_structure(data["access_token"], expected_sub=str(user.id), expected_type="access")
+        self._assert_jwt_structure(
+            data["access_token"], expected_sub=str(user.id), expected_type="access"
+        )
 
     def test_refresh_token_invalid(self, register_user, login_user):
         # Access token test

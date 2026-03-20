@@ -129,8 +129,8 @@ class TestCategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
     def test_create_category_token_error(self, get_headers, expected_code):
         headers = get_headers()
@@ -145,10 +145,12 @@ class TestCategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_update_category_token_error(self, get_headers, create_category, expected_code):
+    def test_update_category_token_error(
+        self, get_headers, create_category, expected_code
+    ):
         response = create_category("UpdateTokenError")
         data = response.get_json()
         cat_id = data["id"]
@@ -169,16 +171,20 @@ class TestCategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_delete_category_token_error(self, get_headers, create_category, expected_code):
+    def test_delete_category_token_error(
+        self, get_headers, create_category, expected_code
+    ):
         response = create_category("DeleteTokenError")
         data = response.get_json()
         cat_id = data["id"]
 
         delete_headers = get_headers()
-        delete_resp = self.client.delete(f"/categories/{cat_id}", headers=delete_headers)
+        delete_resp = self.client.delete(
+            f"/categories/{cat_id}", headers=delete_headers
+        )
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_category_in_db("DeleteTokenError")

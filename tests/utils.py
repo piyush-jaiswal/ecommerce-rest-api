@@ -15,9 +15,7 @@ def get_auth_header(token):
 
 
 def get_expired_token_headers(id=1):
-    token = create_access_token(
-        identity=str(id), expires_delta=timedelta(seconds=-1)
-    )
+    token = create_access_token(identity=str(id), expires_delta=timedelta(seconds=-1))
     return get_auth_header(token)
 
 

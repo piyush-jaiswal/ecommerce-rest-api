@@ -128,8 +128,8 @@ class TestSubcategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
     def test_create_subcategory_token_error(self, get_headers, expected_code):
         headers = get_headers()
@@ -144,10 +144,12 @@ class TestSubcategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_update_subcategory_token_error(self, get_headers, create_subcategory, expected_code):
+    def test_update_subcategory_token_error(
+        self, get_headers, create_subcategory, expected_code
+    ):
         response = create_subcategory("UpdateTokenError")
         data = response.get_json()
         sc_id = data["id"]
@@ -168,16 +170,20 @@ class TestSubcategory:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_delete_subcategory_token_error(self, get_headers, create_subcategory, expected_code):
+    def test_delete_subcategory_token_error(
+        self, get_headers, create_subcategory, expected_code
+    ):
         response = create_subcategory("DeleteTokenError")
         data = response.get_json()
         sc_id = data["id"]
 
         delete_headers = get_headers()
-        delete_resp = self.client.delete(f"/subcategories/{sc_id}", headers=delete_headers)
+        delete_resp = self.client.delete(
+            f"/subcategories/{sc_id}", headers=delete_headers
+        )
 
         utils.verify_token_error_response(delete_resp, expected_code)
         self._verify_subcategory_in_db("DeleteTokenError")

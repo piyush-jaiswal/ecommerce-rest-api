@@ -127,13 +127,7 @@ class TestProduct:
         self._verify_product_in_db("ToDelete", should_exist=False)
 
     @pytest.mark.parametrize(
-        "name",
-        [
-            "Test Product With Spaces And / And @",
-            "Café",
-            "C++",
-            "20% off"
-        ]
+        "name", ["Test Product With Spaces And / And @", "Café", "C++", "20% off"]
     )
     def test_get_product_by_name(self, create_product, name):
         response = create_product(name, "desc")
@@ -148,7 +142,9 @@ class TestProduct:
         assert prod_data["name"] == name
         assert prod_data["description"] == "desc"
 
-        not_found_resp = self.client.get("/products", query_string={"name": "Non existent product"})
+        not_found_resp = self.client.get(
+            "/products", query_string={"name": "Non existent product"}
+        )
         assert not_found_resp.get_json()["products"] == []
 
     @pytest.mark.parametrize(
@@ -156,8 +152,8 @@ class TestProduct:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
     def test_create_product_token_error(self, get_headers, expected_code):
         headers = get_headers()
@@ -172,10 +168,12 @@ class TestProduct:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_update_product_token_error(self, get_headers, create_product, expected_code):
+    def test_update_product_token_error(
+        self, get_headers, create_product, expected_code
+    ):
         response = create_product("UpdateTokenError", "desc")
         data = response.get_json()
         p_id = data["id"]
@@ -196,10 +194,12 @@ class TestProduct:
         [
             (utils.get_expired_token_headers, "token_expired"),
             (utils.get_invalid_token_headers, "invalid_token"),
-            (lambda: None, "authorization_required")
-        ]
+            (lambda: None, "authorization_required"),
+        ],
     )
-    def test_delete_product_token_error(self, get_headers, create_product, expected_code):
+    def test_delete_product_token_error(
+        self, get_headers, create_product, expected_code
+    ):
         response = create_product("DeleteTokenError", "desc")
         data = response.get_json()
         p_id = data["id"]
