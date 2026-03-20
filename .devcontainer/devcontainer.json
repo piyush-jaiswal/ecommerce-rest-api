@@ -1,0 +1,30 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/postgres
+{
+  "name": "Ecommerce REST API",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mtxr.sqltools-driver-pg",
+        "mtxr.sqltools-driver-sqlite",
+        "mtxr.sqltools",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=bashhistory-${devcontainerId},target=/commandhistory,type=volume"
+  ],
+  "remoteEnv": {
+    "TZ": "${localEnv:TZ:UTC}"
+  },
+  
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand"
+}
