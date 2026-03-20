@@ -47,14 +47,6 @@ USER $USERNAME
 ENV EDITOR=nano
 ENV VISUAL=nano
 
-# Copy and set up firewall script
-USER root
-COPY .devcontainer/init-firewall.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/init-firewall.sh && \
-  echo "$USERNAME ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/$USERNAME-firewall && \
-  chmod 0440 /etc/sudoers.d/$USERNAME-firewall
-USER $USERNAME
-
 # [Optional] If your requirements rarely change, uncomment this section to add them to the image.
 RUN mkdir /home/$USERNAME/pip-tmp
 COPY requirements.txt requirements-dev.txt requirements-test.txt /home/$USERNAME/pip-tmp/
@@ -62,3 +54,9 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install --user \
   -r /home/$USERNAME/pip-tmp/requirements-dev.txt \
   -r /home/$USERNAME/pip-tmp/requirements-test.txt \
   && rm -rf /home/$USERNAME/pip-tmp
+
+# Copy and set up firewall script
+USER root
+COPY .devcontainer/init-firewall.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-firewall.sh
+USER $USERNAME
