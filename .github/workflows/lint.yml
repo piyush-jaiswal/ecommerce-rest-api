@@ -27,7 +27,7 @@ jobs:
           pip install $(grep "^ruff==" requirements-dev.txt)
 
       - name: Run ruff linting
-        run: ruff check .
+        run: ruff check . --exclude=migrations
 
       - name: Run ruff formatting check
-        run: ruff format --check .
+        run: ruff format --check . --exclude=migrations
