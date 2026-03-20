@@ -74,6 +74,7 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 # Resolve and add other allowed domains
 for domain in \
 	"marketplace.visualstudio.com" \
+	"*.gallerycdn.vsassets.io" \
 	"vscode.blob.core.windows.net" \
 	"update.code.visualstudio.com" \
 	"pypi.org" \

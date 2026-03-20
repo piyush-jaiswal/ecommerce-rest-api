@@ -12,8 +12,20 @@
         "mtxr.sqltools-driver-pg",
         "mtxr.sqltools-driver-sqlite",
         "mtxr.sqltools",
-        "redhat.vscode-yaml"
-      ]
+        "redhat.vscode-yaml",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit",
+            "source.unusedImports": "explicit"
+          },
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      }
     }
   },
 
