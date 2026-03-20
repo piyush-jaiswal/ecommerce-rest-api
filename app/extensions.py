@@ -5,7 +5,6 @@ from flask_smorest import Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 
-
 # PostgreSQL-compatible naming convention (to follow the naming convention already used in the DB)
 # https://stackoverflow.com/questions/4107915/postgresql-default-constraint-names
 naming_convention = {

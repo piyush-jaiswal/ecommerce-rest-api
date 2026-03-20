@@ -1,6 +1,12 @@
 from faker import Faker
 from app import create_app, db
-from app.models import Category, Subcategory, Product, category_subcategory, subcategory_product
+from app.models import (
+    Category,
+    Subcategory,
+    Product,
+    category_subcategory,
+    subcategory_product,
+)
 import random
 
 
@@ -13,7 +19,7 @@ def create_categories(num=5):
     for _ in range(num):
         category = Category(name=fake.unique.company())
         categories.append(category)
-    
+
     db.session.add_all(categories)
     return categories
 
@@ -23,7 +29,7 @@ def create_subcategories(num=10):
     for _ in range(num):
         subcategory = Subcategory(name=fake.unique.city())
         subcategories.append(subcategory)
-    
+
     db.session.add_all(subcategories)
     return subcategories
 
@@ -31,14 +37,22 @@ def create_subcategories(num=10):
 def create_products(num=50):
     products = []
     for _ in range(num):
-        product = Product(name=fake.unique.catch_phrase(), description=fake.text(max_nb_chars=500))
+        product = Product(
+            name=fake.unique.catch_phrase(), description=fake.text(max_nb_chars=500)
+        )
         products.append(product)
-    
+
     db.session.add_all(products)
     return products
 
 
-def create_relationships(categories, subcategories, products, max_category_association=3, max_subcategory_association=5):
+def create_relationships(
+    categories,
+    subcategories,
+    products,
+    max_category_association=3,
+    max_subcategory_association=5,
+):
     for subcategory in subcategories:
         num_categories = random.randint(1, max_category_association)
         associated_categories = random.sample(categories, num_categories)
@@ -67,9 +81,9 @@ def main():
         categories = create_categories(50)
         subcategories = create_subcategories(100)
         products = create_products(10000)
-        
+
         create_relationships(categories, subcategories, products)
-        
+
         db.session.commit()
         print("db populated!")
 

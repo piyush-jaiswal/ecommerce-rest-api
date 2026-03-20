@@ -5,7 +5,6 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -28,7 +27,6 @@
       }
     }
   },
-
   "remoteUser": "vscode",
   "mounts": [
     "source=bashhistory-${devcontainerId},target=/commandhistory,type=volume"
@@ -36,7 +34,6 @@
   "remoteEnv": {
     "TZ": "${localEnv:TZ:UTC}"
   },
-  
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
   "waitFor": "postStartCommand"
 }
