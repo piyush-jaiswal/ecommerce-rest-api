@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, Index
-from werkzeug.security import generate_password_hash, check_password_hash
-from email_validator import validate_email, EmailNotValidError
 from email_normalize import normalize
+from email_validator import EmailNotValidError, validate_email
+from sqlalchemy import CheckConstraint, Index
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
 
@@ -29,15 +29,15 @@ class User(db.Model):
         ConstraintFactory.non_empty_string("password_hash"),
     )
 
-    # Does not check for non-deliverable mails. Use check_deliverability or resolve for that which does DNS checks
+    # Does not check for non-deliverable mails. Use check_deliverability or skip_dns for that which does DNS checks
     # For more stricter validation, use confirmation emails, or a third party API
     @staticmethod
     def _normalize_email(email):
         # Follows RFCs, allows aliases and only lowers the domain part
         validated = validate_email(email, check_deliverability=False)
         # Lowers the local part and normalizes, removes aliases for popular email providers (gmail, yahoo etc)
-        normalized = normalize(validated.email, resolve=False)
-        return normalized
+        normalized = normalize(validated.email, skip_dns=True)
+        return normalized.normalized_address
 
     @staticmethod
     def get(email):
