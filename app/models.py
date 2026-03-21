@@ -29,7 +29,7 @@ class User(db.Model):
         ConstraintFactory.non_empty_string("password_hash"),
     )
 
-    # Does not check for non-deliverable mails. Use check_deliverability or resolve for that which does DNS checks
+    # Does not check for non-deliverable mails. Use check_deliverability or skip_dns for that which does DNS checks
     # For more stricter validation, use confirmation emails, or a third party API
     @staticmethod
     def _normalize_email(email):
