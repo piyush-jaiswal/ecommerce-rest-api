@@ -68,9 +68,11 @@ def create_app(env="development"):
     # register blueprints
     from app.routes.auth import bp as auth_bp
     from app.routes.category import bp as category_bp
+    from app.routes.health import bp as health_bp
     from app.routes.product import bp as product_bp
     from app.routes.subcategory import bp as subcategory_bp
 
+    api.register_blueprint(health_bp)
     api.register_blueprint(category_bp, url_prefix="/categories")
     api.register_blueprint(subcategory_bp, url_prefix="/subcategories")
     api.register_blueprint(product_bp, url_prefix="/products")
