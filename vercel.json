@@ -5,7 +5,6 @@
       "dest": "/api/vercel_function"
     }
   ],
-  "installCommand": "pip install -r requirements-prod.txt",
   "git": {
     "deploymentEnabled": false
   }

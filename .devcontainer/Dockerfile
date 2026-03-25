@@ -49,7 +49,7 @@ ENV VISUAL=nano
 
 # [Optional] If your requirements rarely change, uncomment this section to add them to the image.
 RUN mkdir /home/$USERNAME/pip-tmp
-COPY requirements.txt requirements-dev.txt requirements-test.txt /home/$USERNAME/pip-tmp/
+COPY requirements-base.txt requirements-dev.txt requirements-test.txt /home/$USERNAME/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install --user \
   -r /home/$USERNAME/pip-tmp/requirements-dev.txt \
   -r /home/$USERNAME/pip-tmp/requirements-test.txt \
