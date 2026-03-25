@@ -1,13 +1,12 @@
 import pytest
 
 from app import create_app, db
-from config import TestingConfig
 from tests import utils
 
 
 @pytest.fixture
 def app():
-    app = create_app(TestingConfig)
+    app = create_app("testing")
 
     # setup
     app_context = app.app_context()
