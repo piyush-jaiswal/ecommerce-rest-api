@@ -17,7 +17,6 @@ class Config:
         "pool_pre_ping": True,  # Verify connections before use
         "connect_args": {
             "connect_timeout": 30,  # Max 30s to establish connection
-            "options": "-c statement_timeout=30000 -c idle_in_transaction_session_timeout=120000",  # Max 30s per query and 2 mins for waiting transactions
         },
     }
 
