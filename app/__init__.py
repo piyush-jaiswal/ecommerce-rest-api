@@ -72,7 +72,9 @@ def create_app(env="development"):
     from app.routes.product import bp as product_bp
     from app.routes.subcategory import bp as subcategory_bp
 
-    api.register_blueprint(health_bp)
+    # register with app to exclude from openapi
+    app.register_blueprint(health_bp)
+
     api.register_blueprint(category_bp, url_prefix="/categories")
     api.register_blueprint(subcategory_bp, url_prefix="/subcategories")
     api.register_blueprint(product_bp, url_prefix="/products")
