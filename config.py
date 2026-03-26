@@ -10,6 +10,17 @@ class Config:
     # sqlalchemy
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # PostgreSQL options
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_timeout": 30,  # Timeout when getting connection from pool
+        "pool_recycle": 3600,  # Recycle connections after 1 hour
+        "pool_pre_ping": True,  # Verify connections before use
+        "connect_args": {
+            "connect_timeout": 30,  # Max 30s to establish connection
+            "options": "-c statement_timeout=30000 -c idle_in_transaction_session_timeout=120000",  # Max 30s per query and 2 mins for waiting transactions
+        },
+    }
+
     # jwt
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=3)
@@ -55,6 +66,15 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     JWT_SECRET_KEY = os.urandom(24).hex()
+
+    # SQLite-specific options
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,  # Only this works with SQLite
+        "connect_args": {
+            "timeout": 30,
+            "check_same_thread": False,  # Allow threading for tests
+        },
+    }
 
 
 class ProductionConfig(Config):
