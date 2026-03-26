@@ -31,7 +31,7 @@ class HealthCheck(MethodView):
                 "status": "up",
                 "response_time_ms": db_response_time,
             }
-        except Exception as e:
+        except Exception:
             current_app.logger.exception("Database health check failed")
             components["database"] = {
                 "status": "down",
@@ -43,7 +43,9 @@ class HealthCheck(MethodView):
         # Add application info
         components["application"] = {
             "status": "up",
-            "version": current_app.config.get("API_VERSION", "v1"),  # Matches API_VERSION from config
+            "version": current_app.config.get(
+                "API_VERSION", "v1"
+            ),  # Matches API_VERSION from config
         }
 
         response_data = {
