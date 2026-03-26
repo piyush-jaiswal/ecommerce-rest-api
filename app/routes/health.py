@@ -43,7 +43,7 @@ class HealthCheck(MethodView):
         # Add application info
         components["application"] = {
             "status": "up",
-            "version": "v1",  # Matches API_VERSION from config
+            "version": current_app.config.get("API_VERSION", "v1"),  # Matches API_VERSION from config
         }
 
         response_data = {
