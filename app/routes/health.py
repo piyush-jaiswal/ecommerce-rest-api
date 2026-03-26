@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timezone
 
-from flask import jsonify
+from flask import current_app, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from sqlalchemy import text
@@ -32,9 +32,10 @@ class HealthCheck(MethodView):
                 "response_time_ms": db_response_time,
             }
         except Exception as e:
+            current_app.logger.error(f"Database health check failed: {e}")
             components["database"] = {
                 "status": "down",
-                "error": str(e),
+                "error": "Database health check failed",
                 "response_time_ms": None,
             }
             overall_status = "unhealthy"

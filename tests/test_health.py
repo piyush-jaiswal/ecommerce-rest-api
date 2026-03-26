@@ -63,7 +63,7 @@ class TestHealthCheck:
         db_component = data["components"]["database"]
         assert db_component["status"] == "down"
         assert "error" in db_component
-        assert "Connection refused" in db_component["error"]
+        assert db_component["error"] == "Database health check failed"
         assert db_component["response_time_ms"] is None
 
         # Verify application component is still up
