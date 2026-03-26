@@ -32,7 +32,7 @@ class HealthCheck(MethodView):
                 "response_time_ms": db_response_time,
             }
         except Exception as e:
-            current_app.logger.error(f"Database health check failed: {e}")
+            current_app.logger.exception("Database health check failed")
             components["database"] = {
                 "status": "down",
                 "error": "Database health check failed",
