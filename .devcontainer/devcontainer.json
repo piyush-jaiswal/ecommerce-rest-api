@@ -2,7 +2,10 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/postgres
 {
   "name": "Ecommerce REST API",
-  "dockerComposeFile": "docker-compose.yml",
+  "dockerComposeFile": [
+    "docker-compose.yml",
+    "docker-compose.override.yml"
+  ],
   "service": "app",
   "workspaceFolder": "/workspace",
   "customizations": {
@@ -34,6 +37,7 @@
   "remoteEnv": {
     "TZ": "${localEnv:TZ:UTC}"
   },
+  "initializeCommand": "bash .devcontainer/generate-override.sh",
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
   "waitFor": "postStartCommand"
 }

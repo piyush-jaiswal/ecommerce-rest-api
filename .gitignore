@@ -15,6 +15,10 @@ venv.bak/
 .idea/
 .vscode
 
+# Devcontainer
+.devcontainer/.devcontainer-ignore
+.devcontainer/docker-compose.override.yml
+
 # Others
 notes.txt
 .vercel
