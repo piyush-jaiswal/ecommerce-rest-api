@@ -1,6 +1,6 @@
 # Example file for .devcontainer-ignore
 # Purpose: Prevent sensitive or unwanted files and folders from being mounted to devcontainers. (Wildcards not supported)
-# Creates an empty directory for each entry, shadowing the corresponsing host system paths
+# Creates an empty directory for each entry, shadowing the corresponding host system paths
 # Writes to them not retained on rebuilds
 
 venv
@@ -8,6 +8,5 @@ __pycache__
 .pytest_cache
 .mypy_cache
 .ruff_cache
-.git
 dist
 build
