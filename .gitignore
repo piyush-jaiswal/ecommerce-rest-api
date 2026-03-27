@@ -16,7 +16,7 @@ venv.bak/
 .vscode
 
 # Devcontainer
-.devcontainer-ignore
+.devcontainer/.devcontainer-ignore
 .devcontainer/docker-compose.override.yml
 
 # Others
