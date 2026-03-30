@@ -63,7 +63,7 @@ class RequestLogger:
                 "error.type": type(exc).__name__,
                 "error.message": str(exc),
             },
-            exc_info=True,
+            exc_info=exc,
         )
 
     @staticmethod

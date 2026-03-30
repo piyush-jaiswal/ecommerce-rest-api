@@ -316,7 +316,7 @@ class TestRequestLogger:
                 assert extra["http.status_code"] == 500
                 assert extra["error.type"] == "ValueError"
                 assert extra["error.message"] == "Test exception"
-                assert mock_error.call_args[1]["exc_info"] is True
+                assert mock_error.call_args[1]["exc_info"] is exception
 
     def test_teardown_request_no_exception(self, app):
         """Test that teardown_request does nothing when no exception occurred."""
