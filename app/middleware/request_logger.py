@@ -93,7 +93,7 @@ class DataScrubber:
 
     @staticmethod
     def scrub_query_string(req: Request):
-        raw = req.query_string.decode()
+        raw = req.query_string.decode("utf-8", errors="replace")
         if not raw:
             return ""
 
