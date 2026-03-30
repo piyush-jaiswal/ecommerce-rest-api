@@ -35,6 +35,9 @@ class Config:
     OPENAPI_SWAGGER_UI_PATH = "/"
     OPENAPI_SWAGGER_UI_URL = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
+    # logging
+    LOG_REQUESTS = False
+
     # flask-smorest Swagger UI top level authorize dialog box
     API_SPEC_OPTIONS = {
         "components": {
@@ -79,6 +82,7 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
     SENTRY_DSN = os.getenv("SENTRY_DSN")
+    LOG_REQUESTS = True
 
 
 config = {

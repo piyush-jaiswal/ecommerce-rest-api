@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 
 from app.extensions import api, db, jwt, migrate
+from app.middleware.request_logger import RequestLogger
 from config import config
 
 
@@ -58,6 +59,9 @@ def create_app(env="development"):
     app = Flask(__name__)
     app.config.from_object(config[env])
     app.url_map.strict_slashes = False
+
+    if app.config.get("LOG_REQUESTS"):
+        RequestLogger(app)
 
     # initialize extensions
     db.init_app(app)
