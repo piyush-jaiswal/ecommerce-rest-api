@@ -3,15 +3,16 @@ import logging
 from flask import Flask
 
 from app.extensions import api, db, jwt, migrate
+from app.middleware.request_logger import RequestLogger
 from config import config
 
 
-def _setup_sentry(dsn):
+def _setup_sentry(dsn, env="production"):
     import sentry_sdk
 
     sentry_sdk.init(
         dsn=dsn,
-        environment="production",
+        environment=env,
         # Add data like request headers and IP for users,
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=False,
@@ -30,25 +31,21 @@ def _setup_sentry(dsn):
     )
 
 
-def _setup_console_logging():
+def _configure_logging(env):
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-
-def _configure_logging(env):
-    if env == "production":
-        sentry_dsn = config[env].SENTRY_DSN
+    if env in ("preview", "production"):
+        sentry_dsn = getattr(config[env], "SENTRY_DSN", None)
         if not sentry_dsn:
             logging.warning("Could not setup sentry. SENTRY_DSN not found.")
             return
 
-        _setup_sentry(sentry_dsn)
-        logging.info("Sentry initialized for production")
-    else:
-        _setup_console_logging()
+        _setup_sentry(sentry_dsn, env)
+        logging.info(f"Sentry initialized for {env}")
 
 
 def create_app(env="development"):
@@ -58,6 +55,9 @@ def create_app(env="development"):
     app = Flask(__name__)
     app.config.from_object(config[env])
     app.url_map.strict_slashes = False
+
+    if app.config.get("LOG_REQUESTS"):
+        RequestLogger(app)
 
     # initialize extensions
     db.init_app(app)
