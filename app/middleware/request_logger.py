@@ -72,7 +72,7 @@ class RequestLogger:
 
 
 class DataScrubber:
-    # Fields whose values are replaced with SENSITIVE_DATA_REPLACEMENT
+    # Fields whose values are replaced with _DATA_REPLACEMENT
     SENSITIVE_KEYS = frozenset(
         {
             "password",
