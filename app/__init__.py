@@ -45,7 +45,7 @@ def _configure_logging(env):
             return
 
         _setup_sentry(sentry_dsn, env)
-        logging.info("Sentry initialized for production")
+        logging.info(f"Sentry initialized for {env}")
 
 
 def create_app(env="development"):
