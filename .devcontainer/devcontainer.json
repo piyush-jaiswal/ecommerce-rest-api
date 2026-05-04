@@ -8,6 +8,12 @@
   ],
   "service": "app",
   "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2.16.1": {
+      "version": "latest",
+      "moby": false
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [

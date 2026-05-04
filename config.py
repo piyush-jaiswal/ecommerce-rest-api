@@ -66,17 +66,12 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     JWT_SECRET_KEY = os.urandom(24).hex()
+    LOG_REQUESTS = True
 
-    # SQLite-specific options
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,  # Only this works with SQLite
-        "connect_args": {
-            "timeout": 30,
-            "check_same_thread": False,  # Allow threading for tests
-        },
-    }
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.SQLALCHEMY_DATABASE_URI = kwargs["SQLALCHEMY_DATABASE_URI"]
 
 
 class ProductionConfig(Config):

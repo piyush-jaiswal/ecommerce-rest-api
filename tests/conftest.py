@@ -1,12 +1,24 @@
 import pytest
+from testcontainers.postgres import PostgresContainer
 
 from app import create_app, db
 from tests import utils
 
 
-@pytest.fixture
-def app():
-    app = create_app("testing")
+@pytest.fixture(scope="session")
+def pg_container():
+    with PostgresContainer("postgres:16") as pg:
+        yield pg
+
+
+@pytest.fixture(scope="session")
+def app(pg_container):
+    app = create_app(
+        "testing",
+        **{
+            "SQLALCHEMY_DATABASE_URI": pg_container.get_connection_url(),
+        },
+    )
 
     # setup
     app_context = app.app_context()
@@ -18,7 +30,21 @@ def app():
     # teardown
     db.session.remove()
     db.drop_all()
+    db.engine.dispose()
     app_context.pop()
+
+
+# Automatically clean database between tests. Required since app fixture uses session scope
+@pytest.fixture(autouse=True)
+def clean_db(app):
+    yield
+
+    # Clean all tables after each test
+    with app.app_context():
+        for table in reversed(db.metadata.sorted_tables):
+            db.session.execute(table.delete())
+        db.session.commit()
+        db.session.remove()
 
 
 @pytest.fixture

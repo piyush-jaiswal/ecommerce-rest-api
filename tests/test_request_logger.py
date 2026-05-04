@@ -189,13 +189,12 @@ class TestRequestLogger:
         """Set up test environment with Flask app and client."""
         self.app = app
         self.client = client
-        # Initialize RequestLogger with the test app
-        self.logger = RequestLogger(app)
+        self.logger = app.extensions["request_logger"]
 
     @patch.object(RequestLogger, "_duration_ms", return_value=123.45)
-    def test_successful_request_logging(self, mock_duration, app):
+    def test_successful_request_logging(self, mock_duration):
         """Test logging of successful requests."""
-        with patch.object(app.logger, "info") as mock_info:
+        with patch.object(self.app.logger, "info") as mock_info:
             self.client.get("/health")
 
             # Verify info logging was called
@@ -217,9 +216,9 @@ class TestRequestLogger:
             assert extra["http.duration_ms"] == 123.45
 
     @patch.object(RequestLogger, "_duration_ms", return_value=67.89)
-    def test_client_error_logging(self, mock_duration, app):
+    def test_client_error_logging(self, mock_duration):
         """Test logging of 4xx client error responses."""
-        with patch.object(app.logger, "warning") as mock_warning:
+        with patch.object(self.app.logger, "warning") as mock_warning:
             self.client.get("/nonexistent")
 
             # Verify warning logging was called for 404
@@ -237,10 +236,10 @@ class TestRequestLogger:
             assert extra["http.status_code"] == 404
             assert extra["http.duration_ms"] == 67.89
 
-    def test_post_request_with_body_logging(self, app):
+    def test_post_request_with_body_logging(self):
         """Test logging of POST requests with request body."""
         # POST to /health returns 405 (Method Not Allowed), so it logs as warning
-        with patch.object(app.logger, "warning") as mock_warning:
+        with patch.object(self.app.logger, "warning") as mock_warning:
             self.client.post(
                 "/health",
                 json={"username": "john", "password": "secret123"},
@@ -256,9 +255,9 @@ class TestRequestLogger:
             assert body_data["username"] == "john"
             assert body_data["password"] == "[redacted]"
 
-    def test_request_with_query_params_logging(self, app):
+    def test_request_with_query_params_logging(self):
         """Test logging of requests with query parameters."""
-        with patch.object(app.logger, "info") as mock_info:
+        with patch.object(self.app.logger, "info") as mock_info:
             self.client.get("/health?page=1&token=secret123")
 
             assert mock_info.called
@@ -270,9 +269,9 @@ class TestRequestLogger:
             assert query_data["page"] == ["1"]
             assert query_data["token"] == ["[redacted]"]
 
-    def test_before_request_sets_timing(self, app):
+    def test_before_request_sets_timing(self):
         """Test that before_request sets up timing variables."""
-        with app.test_request_context("/test"):
+        with self.app.test_request_context("/test"):
             self.logger._before_request()
 
             # Verify timing variables are set
@@ -281,9 +280,9 @@ class TestRequestLogger:
             assert g.log_emitted is False
 
     @patch("app.middleware.request_logger.time.perf_counter")
-    def test_duration_calculation(self, mock_perf_counter, app):
+    def test_duration_calculation(self, mock_perf_counter):
         """Test duration calculation accuracy."""
-        with app.test_request_context("/test"):
+        with self.app.test_request_context("/test"):
             g.log_start_time = 100.0
             mock_perf_counter.return_value = 100.123
             duration = RequestLogger._duration_ms()
@@ -291,15 +290,15 @@ class TestRequestLogger:
             assert duration == 123.0  # (100.123 - 100.0) * 1000 rounded to 2 places
 
     @patch.object(RequestLogger, "_duration_ms", return_value=999.99)
-    def test_teardown_request_on_exception(self, mock_duration, app):
+    def test_teardown_request_on_exception(self, mock_duration):
         """Test that teardown_request logs unhandled exceptions."""
-        with app.test_request_context("/test"):
+        with self.app.test_request_context("/test"):
             g.log_start_time = 100.0
             g.log_emitted = False  # Simulate exception bypassed after_request
 
             exception = ValueError("Test exception")
 
-            with patch.object(app.logger, "error") as mock_error:
+            with patch.object(self.app.logger, "error") as mock_error:
                 self.logger._teardown_request(exception)
 
                 # Verify error logging was called
@@ -318,30 +317,30 @@ class TestRequestLogger:
                 assert extra["error.message"] == "Test exception"
                 assert mock_error.call_args[1]["exc_info"] is exception
 
-    def test_teardown_request_no_exception(self, app):
+    def test_teardown_request_no_exception(self):
         """Test that teardown_request does nothing when no exception occurred."""
-        with app.test_request_context("/test"):
-            with patch.object(app.logger, "error") as mock_error:
+        with self.app.test_request_context("/test"):
+            with patch.object(self.app.logger, "error") as mock_error:
                 self.logger._teardown_request(None)
 
                 # Verify no logging for successful requests
                 assert not mock_error.called
 
-    def test_teardown_request_already_logged(self, app):
+    def test_teardown_request_already_logged(self):
         """Test that teardown_request does nothing when log was already emitted."""
-        with app.test_request_context("/test"):
+        with self.app.test_request_context("/test"):
             g.log_emitted = True  # Simulate log already emitted in after_request
             exception = ValueError("Test exception")
 
-            with patch.object(app.logger, "error") as mock_error:
+            with patch.object(self.app.logger, "error") as mock_error:
                 self.logger._teardown_request(exception)
 
                 # Verify no duplicate logging
                 assert not mock_error.called
 
-    def test_response_content_type_logging(self, app):
+    def test_response_content_type_logging(self):
         """Test that response content type is properly logged."""
-        with patch.object(app.logger, "info") as mock_info:
+        with patch.object(self.app.logger, "info") as mock_info:
             self.client.get("/health")
 
             assert mock_info.called
@@ -352,9 +351,9 @@ class TestRequestLogger:
             assert "http.response.content_type" in extra
             assert extra["http.response.content_type"] is not None
 
-    def test_route_vs_path_logging(self, app):
+    def test_route_vs_path_logging(self):
         """Test that both route and path are logged correctly."""
-        with patch.object(app.logger, "info") as mock_info:
+        with patch.object(self.app.logger, "info") as mock_info:
             self.client.get("/health")
 
             assert mock_info.called
@@ -366,9 +365,9 @@ class TestRequestLogger:
             assert "http.route" in extra
             # Route might be the same as path for simple routes or include rule pattern
 
-    def test_log_emitted_flag_set(self, app):
+    def test_log_emitted_flag_set(self):
         """Test that log_emitted flag is properly set after logging."""
-        with app.test_request_context("/test"):
+        with self.app.test_request_context("/test"):
             g.log_start_time = 100.0
             g.log_emitted = False
 
@@ -376,7 +375,7 @@ class TestRequestLogger:
             mock_response.status_code = 200
             mock_response.content_type = "application/json"
 
-            with patch.object(app.logger, "info"):
+            with patch.object(self.app.logger, "info"):
                 result = self.logger._after_request(mock_response)
 
                 # Verify flag is set and response is returned unchanged
@@ -392,8 +391,6 @@ class TestRequestLoggerIntegration:
         """Set up test environment."""
         self.app = app
         self.client = client
-        # Initialize RequestLogger
-        self.logger = RequestLogger(app)
 
     def test_full_request_lifecycle_logging(self):
         """Test complete request lifecycle with actual Flask app."""

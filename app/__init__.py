@@ -48,12 +48,12 @@ def _configure_logging(env):
         logging.info(f"Sentry initialized for {env}")
 
 
-def create_app(env="development"):
+def create_app(env="development", **kwargs):
     # Use app.logger for logging
     _configure_logging(env)
 
     app = Flask(__name__)
-    app.config.from_object(config[env])
+    app.config.from_object(config[env](**kwargs))
     app.url_map.strict_slashes = False
 
     if app.config.get("LOG_REQUESTS"):

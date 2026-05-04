@@ -12,6 +12,9 @@ class RequestLogger:
         app.after_request(self._after_request)
         app.teardown_request(self._teardown_request)
 
+        # Store instance on app for easy access (Flask extension pattern)
+        app.extensions["request_logger"] = self
+
     def _before_request(self):
         g.log_start_time = time.perf_counter()
         g.log_emitted = False

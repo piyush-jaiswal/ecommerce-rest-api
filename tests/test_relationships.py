@@ -1,7 +1,4 @@
-import sqlite3
-
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from app.models import Category, Product, Subcategory
 
@@ -138,15 +135,15 @@ class TestRelationships:
         ).get_json()
 
         headers = create_authenticated_headers()
-        with pytest.raises(IntegrityError) as ie:
-            self.client.put(
-                f"/categories/{category['id']}",
-                json={"subcategories": [subcategory["id"]]},
-                headers=headers,
-            )
+        response = self.client.put(
+            f"/categories/{category['id']}",
+            json={"subcategories": [subcategory["id"]]},
+            headers=headers,
+        )
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Category and subcategory already linked" in data["message"]
         assert self._category_subcategory_ids(category["id"]) == [subcategory["id"]]
 
     def test_update_subcategory_adds_categories_and_products(
@@ -194,31 +191,37 @@ class TestRelationships:
         ).get_json()
 
         headers = create_authenticated_headers()
-        with pytest.raises(IntegrityError) as ie_c:
-            self.client.put(
-                f"/subcategories/{subcategory['id']}",
-                json={"categories": [category["id"]]},
-                headers=headers,
-            )
-        with pytest.raises(IntegrityError) as ie_p:
-            self.client.put(
-                f"/subcategories/{subcategory['id']}",
-                json={"products": [product["id"]]},
-                headers=headers,
-            )
-        with pytest.raises(IntegrityError) as ie_cp:
-            self.client.put(
-                f"/subcategories/{subcategory['id']}",
-                json={"categories": [category["id"]], "products": [product["id"]]},
-                headers=headers,
-            )
+        response = self.client.put(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories": [category["id"]]},
+            headers=headers,
+        )
 
-        assert isinstance(ie_c.value.orig, sqlite3.IntegrityError)
-        assert isinstance(ie_p.value.orig, sqlite3.IntegrityError)
-        assert isinstance(ie_cp.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie_c.value.orig)
-        assert "UNIQUE constraint failed" in str(ie_p.value.orig)
-        assert "UNIQUE constraint failed" in str(ie_cp.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Subcategory and category already linked" in data["message"]
+        resp_p = self.client.put(
+            f"/subcategories/{subcategory['id']}",
+            json={"products": [product["id"]]},
+            headers=headers,
+        )
+        resp_cp = self.client.put(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories": [category["id"]], "products": [product["id"]]},
+            headers=headers,
+        )
+
+        assert resp_p.status_code == 409
+        data_p = resp_p.get_json()
+        assert "Subcategory and product already linked" in data_p["message"]
+
+        assert resp_cp.status_code == 409
+        data_cp = resp_cp.get_json()
+        # Could be either message depending on which constraint is hit first
+        assert (
+            "Subcategory and category already linked" in data_cp["message"]
+            or "Subcategory and product already linked" in data_cp["message"]
+        )
 
         assert self._subcategory_category_ids(subcategory["id"]) == [category["id"]]
         assert self._subcategory_product_ids(subcategory["id"]) == [product["id"]]
@@ -253,15 +256,15 @@ class TestRelationships:
             "UP", "desc", subcategories=[subcategory1["id"], subcategory2["id"]]
         ).get_json()
 
-        with pytest.raises(IntegrityError) as ie:
-            self.client.put(
-                f"/products/{product['id']}",
-                json={"subcategories": [subcategory1["id"]]},
-                headers=create_authenticated_headers(),
-            )
+        response = self.client.put(
+            f"/products/{product['id']}",
+            json={"subcategories": [subcategory1["id"]]},
+            headers=create_authenticated_headers(),
+        )
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Product and subcategory already linked" in data["message"]
         assert self._product_subcategory_ids(product["id"]) == sorted(
             [subcategory1["id"], subcategory2["id"]]
         )

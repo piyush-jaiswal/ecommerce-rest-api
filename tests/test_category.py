@@ -1,7 +1,4 @@
-import sqlite3
-
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from app.models import Category
 from tests import utils
@@ -39,11 +36,11 @@ class TestCategory:
     def test_create_category_duplicate_name(self, create_category):
         create_category(self.TEST_CATEGORY_NAME)
 
-        with pytest.raises(IntegrityError) as ie:
-            create_category(self.TEST_CATEGORY_NAME)
+        response = create_category(self.TEST_CATEGORY_NAME)
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Category with this name already exists" in data["message"]
         assert self._count_categories() == 1
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
@@ -98,15 +95,15 @@ class TestCategory:
         data = response.get_json()
         cat_id = data["id"]
 
-        with pytest.raises(IntegrityError) as ie:
-            self.client.put(
-                f"/categories/{cat_id}",
-                json={"name": "OldName"},
-                headers=create_authenticated_headers(),
-            )
+        update_resp = self.client.put(
+            f"/categories/{cat_id}",
+            json={"name": "OldName"},
+            headers=create_authenticated_headers(),
+        )
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert update_resp.status_code == 409
+        data = update_resp.get_json()
+        assert "Category with this name already exists" in data["message"]
         self._verify_category_in_db("OldName")
         self._verify_category_in_db("NewName")
 
