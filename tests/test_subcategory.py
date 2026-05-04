@@ -1,7 +1,4 @@
-import sqlite3
-
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from app.models import Subcategory
 from tests import utils
@@ -39,11 +36,11 @@ class TestSubcategory:
     def test_create_subcategory_duplicate_name(self, create_subcategory):
         create_subcategory(self.TEST_SUBCATEGORY_NAME)
 
-        with pytest.raises(IntegrityError) as ie:
-            create_subcategory(self.TEST_SUBCATEGORY_NAME)
+        response = create_subcategory(self.TEST_SUBCATEGORY_NAME)
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Subcategory with this name already exists" in data["message"]
         assert self._count_subcategories() == 1
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
 
@@ -97,15 +94,15 @@ class TestSubcategory:
         data = response.get_json()
         sc_id = data["id"]
 
-        with pytest.raises(IntegrityError) as ie:
-            self.client.put(
-                f"/subcategories/{sc_id}",
-                json={"name": "OldSubcat"},
-                headers=create_authenticated_headers(),
-            )
+        update_resp = self.client.put(
+            f"/subcategories/{sc_id}",
+            json={"name": "OldSubcat"},
+            headers=create_authenticated_headers(),
+        )
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert update_resp.status_code == 409
+        data = update_resp.get_json()
+        assert "Subcategory with this name already exists" in data["message"]
         self._verify_subcategory_in_db("OldSubcat")
         self._verify_subcategory_in_db("NewSubcat")
 

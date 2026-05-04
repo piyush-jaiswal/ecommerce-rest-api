@@ -1,7 +1,4 @@
-import sqlite3
-
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from app.models import Product
 from tests import utils
@@ -41,11 +38,11 @@ class TestProduct:
     def test_create_product_duplicate_name(self, create_product):
         create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
 
-        with pytest.raises(IntegrityError) as ie:
-            create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
+        response = create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Product with this name already exists" in data["message"]
         assert self._count_products() == 1
         self._verify_product_in_db(self.TEST_PRODUCT_NAME)
 
@@ -100,15 +97,15 @@ class TestProduct:
         data = response.get_json()
         cat_id = data["id"]
 
-        with pytest.raises(IntegrityError) as ie:
-            self.client.put(
-                f"/products/{cat_id}",
-                json={"name": "OldProduct"},
-                headers=create_authenticated_headers(),
-            )
+        update_resp = self.client.put(
+            f"/products/{cat_id}",
+            json={"name": "OldProduct"},
+            headers=create_authenticated_headers(),
+        )
 
-        assert isinstance(ie.value.orig, sqlite3.IntegrityError)
-        assert "UNIQUE constraint failed" in str(ie.value.orig)
+        assert update_resp.status_code == 409
+        data = update_resp.get_json()
+        assert "Product with this name already exists" in data["message"]
         self._verify_product_in_db("OldProduct")
         self._verify_product_in_db("NewProduct")
 
