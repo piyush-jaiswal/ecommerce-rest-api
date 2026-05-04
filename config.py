@@ -71,7 +71,7 @@ class TestingConfig(Config):
 
     def __init__(self, **kwargs):
         super().__init__()
-        TestingConfig.SQLALCHEMY_DATABASE_URI = kwargs["SQLALCHEMY_DATABASE_URI"]
+        self.SQLALCHEMY_DATABASE_URI = kwargs["SQLALCHEMY_DATABASE_URI"]
 
 
 class ProductionConfig(Config):
