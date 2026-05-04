@@ -2,8 +2,12 @@
 set -euo pipefail # Exit on error, undefined vars, and pipeline failures
 IFS=$'\n\t'       # Stricter word splitting
 
-# 1. Extract Docker DNS info BEFORE any flushing
-DOCKER_DNS_RULES=$(iptables-save -t nat | grep "127\.0\.0\.11" || true)
+# Capture ALL Docker rules BEFORE any flushing
+echo "Capturing existing Docker rules..."
+DOCKER_NAT_CHAINS=$(iptables-save -t nat | grep "^-N DOCKER" || true)
+DOCKER_NAT_RULES=$(iptables-save -t nat | grep -E "^-A (DOCKER|PREROUTING|OUTPUT|POSTROUTING).*(docker|DOCKER|127\.0\.0\.11)" || true)
+DOCKER_FILTER_CHAINS=$(iptables-save -t filter | grep "^-N DOCKER" || true)
+DOCKER_FILTER_RULES=$(iptables-save -t filter | grep -E "^-A (DOCKER|FORWARD).*(docker|DOCKER|docker0)" || true)
 
 # Flush existing rules and delete existing ipsets
 iptables -F
@@ -19,18 +23,46 @@ iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
 
-# 2. Selectively restore ONLY internal Docker DNS resolution
-if [ -n "$DOCKER_DNS_RULES" ]; then
-	echo "Restoring Docker DNS rules..."
-	iptables -t nat -N DOCKER_OUTPUT 2>/dev/null || true
-	iptables -t nat -N DOCKER_POSTROUTING 2>/dev/null || true
-	echo "$DOCKER_DNS_RULES" | xargs -L 1 iptables -t nat
+# Restore Docker NAT chains and rules
+echo "Restoring Docker NAT chains..."
+for chain in DOCKER DOCKER-INGRESS DOCKER_OUTPUT DOCKER_POSTROUTING; do
+	iptables -t nat -N "$chain" 2>/dev/null || true
+done
+# Also replay any chains captured from the live ruleset
+if [ -n "$DOCKER_NAT_CHAINS" ]; then
+	while IFS= read -r rule; do
+		iptables -t nat $rule 2>/dev/null || true
+	done <<<"$DOCKER_NAT_CHAINS"
+fi
+if [ -n "$DOCKER_NAT_RULES" ]; then
+	echo "Restoring Docker NAT rules..."
+	while IFS= read -r rule; do
+		iptables -t nat $rule 2>/dev/null || true
+	done <<<"$DOCKER_NAT_RULES"
 else
-	echo "No Docker DNS rules to restore"
+	echo "No Docker NAT rules to restore"
 fi
 
-# First allow DNS and localhost before any restrictions
-# allow established/related traffic (both directions)
+# Restore Docker filter chains and rules
+echo "Restoring Docker filter chains..."
+for chain in DOCKER DOCKER-ISOLATION-STAGE-1 DOCKER-ISOLATION-STAGE-2 DOCKER-USER; do
+	iptables -N "$chain" 2>/dev/null || true
+done
+if [ -n "$DOCKER_FILTER_CHAINS" ]; then
+	while IFS= read -r rule; do
+		iptables $rule 2>/dev/null || true
+	done <<<"$DOCKER_FILTER_CHAINS"
+fi
+if [ -n "$DOCKER_FILTER_RULES" ]; then
+	echo "Restoring Docker filter rules..."
+	while IFS= read -r rule; do
+		iptables $rule 2>/dev/null || true
+	done <<<"$DOCKER_FILTER_RULES"
+else
+	echo "No Docker filter rules to restore"
+fi
+
+# Allow established/related traffic (both directions)
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
@@ -45,8 +77,15 @@ iptables -A OUTPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j A
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
+# Allow Docker bridge networking
+iptables -A INPUT -i docker0 -j ACCEPT
+iptables -A OUTPUT -o docker0 -j ACCEPT
+iptables -A FORWARD -i docker0 -j ACCEPT
+iptables -A FORWARD -o docker0 -j ACCEPT
+
 # Create ipset with CIDR support
-ipset create allowed-domains hash:net
+ipset create allowed-domains hash:net -exist
+ipset flush allowed-domains
 
 # Fetch GitHub meta information and aggregate + add their IP ranges
 echo "Fetching GitHub IP ranges..."
@@ -68,7 +107,7 @@ while read -r cidr; do
 		exit 1
 	fi
 	echo "Adding GitHub range $cidr"
-	ipset add allowed-domains "$cidr"
+	ipset add allowed-domains "$cidr" -exist
 done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 
 # Resolve and add other allowed domains
@@ -78,7 +117,10 @@ for domain in \
 	"vscode.blob.core.windows.net" \
 	"update.code.visualstudio.com" \
 	"pypi.org" \
-	"files.pythonhosted.org"; do
+	"files.pythonhosted.org" \
+	"auth.docker.io" \
+	"index.docker.io" \
+	"registry-1.docker.io"; do
 	echo "Resolving $domain..."
 	ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
 	if [ -z "$ips" ]; then
