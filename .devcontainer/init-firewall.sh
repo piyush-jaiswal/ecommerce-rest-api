@@ -120,7 +120,8 @@ for domain in \
 	"files.pythonhosted.org" \
 	"auth.docker.io" \
 	"index.docker.io" \
-	"registry-1.docker.io"; do
+	"production.cloudflare.docker.com" \
+	"*.r2.cloudflarestorage.com"; do
 	echo "Resolving $domain..."
 	ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
 	if [ -z "$ips" ]; then
