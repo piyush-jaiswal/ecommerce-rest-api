@@ -19,10 +19,10 @@ def _setup_sentry(dsn, env="production"):
         include_source_context=False,
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
-        traces_sample_rate=1.0,
+        traces_sample_rate=0.2,
         # To collect profiles for all profile sessions,
         # set `profile_session_sample_rate` to 1.0.
-        profile_session_sample_rate=1.0,
+        profile_session_sample_rate=0.2,
         # Profiles will be automatically collected while
         # there is an active span.
         profile_lifecycle="trace",
