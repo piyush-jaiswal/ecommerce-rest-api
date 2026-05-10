@@ -124,27 +124,6 @@ class TestProduct:
         self._verify_product_in_db("ToDelete", should_exist=False)
 
     @pytest.mark.parametrize(
-        "name", ["Test Product With Spaces And / And @", "Café", "C++", "20% off"]
-    )
-    def test_get_product_by_name(self, create_product, name):
-        response = create_product(name, "desc")
-        assert response.status_code == 201
-        data = response.get_json()
-        p_id = data["id"]
-
-        get_resp = self.client.get("/products", query_string={"name": name})
-        assert get_resp.status_code == 200
-        prod_data = get_resp.get_json()["products"][0]
-        assert prod_data["id"] == p_id
-        assert prod_data["name"] == name
-        assert prod_data["description"] == "desc"
-
-        not_found_resp = self.client.get(
-            "/products", query_string={"name": "Non existent product"}
-        )
-        assert not_found_resp.get_json()["products"] == []
-
-    @pytest.mark.parametrize(
         "get_headers, expected_code",
         [
             (utils.get_expired_token_headers, "token_expired"),
@@ -229,3 +208,100 @@ class TestProduct:
         assert len(data2["products"]) == 5
         assert data2["cursor"]["next"] is None
         assert isinstance(data2["cursor"]["prev"], str)
+
+    def test_search_products_basic(self, create_product):
+        create_product("iPhone 13", "Latest Apple iPhone")
+        create_product("Samsung Galaxy S21", "Android flagship")
+        create_product("Apple Watch", "Wearable device")
+
+        # exact match (full name)
+        resp_exact = self.client.get(
+            "/products/search", query_string={"q": "iPhone 13"}
+        )
+        assert resp_exact.status_code == 200
+        data_exact = resp_exact.get_json()
+        names_exact = [p["name"] for p in data_exact["products"]]
+        assert names_exact == ["iPhone 13"]
+
+        # Partial match (substring)
+        resp = self.client.get("/products/search", query_string={"q": "iPhone"})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        names = [p["name"] for p in data["products"]]
+        assert "iPhone 13" in names
+
+        resp2 = self.client.get("/products/search", query_string={"q": "Apple"})
+        assert resp2.status_code == 200
+        data2 = resp2.get_json()
+        names2 = [p["name"] for p in data2["products"]]
+        assert "Apple Watch" in names2
+
+    def test_search_products_ranking(self, create_product):
+        # All these should have strong matches (rank > 0.5)
+        create_product("iPhone iPhone iPhone 13", "Apple phone")  # name match, highest
+        create_product(
+            "iPhone iPhone Accessory", "Accessory for iPhone"
+        )  # name match, medium
+        create_product("iPhone Case", "Case for iPhone")  # name match, lowest
+        create_product("Samsung", "Android flagship")  # no match
+
+        resp = self.client.get("/products/search", query_string={"q": "iPhone"})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        names = [p["name"] for p in data["products"]]
+        # Should be in this order due to search_vector weights and rank ordering
+        expected = ["iPhone iPhone iPhone 13", "iPhone iPhone Accessory", "iPhone Case"]
+        assert names == expected
+        assert "Samsung" not in names
+
+    def test_search_products_no_results(self, create_product):
+        create_product("iPhone 13", "Latest Apple iPhone")
+        resp = self.client.get("/products/search", query_string={"q": "Nonexistent"})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["products"] == []
+
+    def test_search_products_special_characters(self, create_product):
+        create_product("C++ Book", "Programming language book")
+        resp = self.client.get("/products/search", query_string={"q": "C++"})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        names = [p["name"] for p in data["products"]]
+        assert names == ["C++ Book"]
+
+    def test_search_products_pagination(self, create_product):
+        for i in range(15):
+            create_product(f"iPhone {i}", f"Description {i}")
+
+        # Page 1
+        resp1 = self.client.get("/products/search", query_string={"q": "iPhone"})
+        assert resp1.status_code == 200
+        data1 = resp1.get_json()
+        assert isinstance(data1["products"], list)
+        assert len(data1["products"]) == 10
+
+        # Page 2
+        next_cursor = data1["cursor"]["next"]
+        assert next_cursor is not None
+        resp2 = self.client.get(
+            "/products/search", query_string={"q": "iPhone", "cursor": next_cursor}
+        )
+        assert resp2.status_code == 200
+        data2 = resp2.get_json()
+        assert isinstance(data2["products"], list)
+        assert len(data2["products"]) == 5
+
+    def test_search_products_empty_query(self):
+        # empty query
+        resp = self.client.get("/products/search", query_string={"q": ""})
+        assert resp.status_code == 422
+
+        # whitespace-only query
+        resp = self.client.get("/products/search", query_string={"q": "   "})
+        assert resp.status_code == 422
+
+        # no query
+        resp = self.client.get("/products/search")
+        assert resp.status_code == 422
+
+        assert Product.query.count() == 0

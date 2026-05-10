@@ -8,9 +8,11 @@ RESTful HTTP API using Python Flask that allows users to manage their ecommerce 
 
 Ability to create, read, update, and delete products, categories and subcategories. A category can have multiple subcategories and a subcategory can belong to multiple categories. Products can belong to multiple categories and subcategories.
 <br></br>
-Fetching a product fetches the details of categories and subcategories it belongs to. Provides the ability to search for products by name, category and subcategories.
+Fetching a product fetches the details of categories and subcategories it belongs to. Provides the ability to fetch products under a category or subcategory. Products can also be searched for.
 <br></br>
-Paginates result using cursor based pagination when products are fetched by categories, subcategories or themselves.
+Product search is powered by PostgreSQL's full-text search. It searches against the product's name and description, giving more weight to matches in the name. The search is flexible and understands web-style queries. Results are ranked by relevance to provide the best matches first.
+<br></br>
+Paginates results using cursor-based pagination when products are fetched by category, subcategory, or all at once. Pagination is also supported for product searches.
 
 Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
@@ -63,8 +65,8 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 
 ### Endpoints
 
-#### Fetch products using name, category, subcategory
-- [GET] `/products?name=<name: string>` - Get product with name: `name` <br/><br/>
+#### Fetch products using category, subcategory, or search for them
+- [GET] `/products/search?q=<query: str>&cursor=<cursor: str>` - Search for products. Results are ranked by relevance. Supports pagination with `cursor`. The `q` parameter is required. <br/><br/>
 - [GET] `/subcategories/<subcategory_id: int>/products` - Get first page of products within subcategory `subcategory_id`. <br/><br/>
 - [GET] `/subcategories/<subcategory_id: int>/products?cursor=<cursor: str>` - Get products paginated using cursor within subcategory `subcategory_id`. Next and previous page `cursors` provided in responses. <br/><br/>
 - [GET] `/categories/<category_id: int>/products` - Get first page of products within category `category_id`. <br/><br/>
@@ -155,6 +157,7 @@ Test the API using Swagger UI (`/` route), Postman, cURL or your preferred HTTP 
 - [GET] `/products` - Get first page of products
 - [GET] `/products?cursor=<cursor: str>` - Get products paginated using cursor. Next and previous page `cursors` provided in responses.
 - [GET] `/products/(int: product_id)` - Get product with product_id
+- [GET] `/products/search?q=<query: str>&cursor=<cursor: str>` - Search for products using name and description (weighted). Results are ranked by relevance. Supports pagination with `cursor`. The `q` parameter is required and cannot be empty.
 - [GET] `/products/(int: product_id)/subcategories` - Get subcategories related to product_id
 - [DELETE] `/products/(int: product_id)` (Protected) - Delete product with product_id
 

@@ -95,11 +95,12 @@ class SubcategoryIn(SQLAlchemySchema):
 class ProductOut(SQLAlchemyAutoSchema):
     class Meta:
         model = Product
+        exclude = ("search_vector",)
 
 
 class ProductsOut(Schema):
     products = fields.List(fields.Nested(ProductOut))
-    cursor = Cursor(required=False)  # require false for getting product by name
+    cursor = Cursor()
 
 
 class ProductIn(SQLAlchemySchema):
@@ -125,8 +126,8 @@ class ProductIn(SQLAlchemySchema):
             raise ValidationError("Cannot be empty")
 
 
-class NameArgs(Schema):
-    name = fields.Str(load_default=None)
+class SearchArgs(Schema):
+    q = fields.Str(required=True, pre_load=str.strip, validate=validate.Length(min=1))
 
 
 class PaginationArgs(Schema):

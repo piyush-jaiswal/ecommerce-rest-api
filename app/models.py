@@ -2,7 +2,8 @@ from datetime import datetime
 
 from email_normalize import normalize
 from email_validator import EmailNotValidError, validate_email
-from sqlalchemy import CheckConstraint, Index
+from sqlalchemy import CheckConstraint, Computed, Index
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
@@ -142,6 +143,16 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    search_vector = db.Column(
+        TSVECTOR,
+        Computed(
+            "setweight(to_tsvector('english', coalesce(name, '')), 'A') || "
+            "setweight(to_tsvector('english', coalesce(description, '')), 'B')",
+            persisted=True,
+        ),
+        nullable=False,
+    )
     subcategories = db.relationship(
         "Subcategory",
         secondary=subcategory_product,
@@ -150,4 +161,7 @@ class Product(db.Model):
         passive_deletes=True,
     )
 
-    __table_args__ = (ConstraintFactory.non_empty_string("name"),)
+    __table_args__ = (
+        ConstraintFactory.non_empty_string("name"),
+        Index(None, "search_vector", postgresql_using="gin"),
+    )
