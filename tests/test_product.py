@@ -296,6 +296,10 @@ class TestProduct:
         resp = self.client.get("/products/search", query_string={"q": ""})
         assert resp.status_code == 422
 
+        # whitespace-only query
+        resp = self.client.get("/products/search", query_string={"q": "   "})
+        assert resp.status_code == 422
+
         # no query
         resp = self.client.get("/products/search")
         assert resp.status_code == 422
