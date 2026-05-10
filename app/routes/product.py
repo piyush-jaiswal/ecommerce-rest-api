@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 from psycopg2.errors import UniqueViolation
 from sqlakeyset import get_page
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Numeric, UniqueConstraint, cast, func
 from sqlalchemy.exc import IntegrityError
 
 from app import db
@@ -13,11 +13,11 @@ from app.models import (
     subcategory_product,
 )
 from app.schemas import (
-    NameArgs,
     PaginationArgs,
     ProductIn,
     ProductOut,
     ProductsOut,
+    SearchArgs,
     SubcategoriesOut,
 )
 
@@ -42,24 +42,13 @@ class ProductCollection(MethodView):
 
     _NAME_UNIQUE_CONSTRAINT = _get_name_unique_constraint()
 
-    def _get_by_name(self, name):
-        return Product.query.filter(Product.name == name)
-
-    @bp.doc(
-        summary="Get All Products",
-        description="If name is passed, filters the result to that single product, if present",
-    )
-    @bp.arguments(NameArgs, location="query", as_kwargs=True)
+    @bp.doc(summary="Get All Products")
     @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
     @bp.response(200, ProductsOut)
-    def get(self, name, cursor):
-        if name is not None:
-            products = self._get_by_name(name)
-            return {"products": products}
-        else:
-            products = Product.query.order_by(Product.id.asc())
-            page = get_page(products, per_page=ProductCollection._PER_PAGE, page=cursor)
-            return {"products": page, "cursor": page.paging}
+    def get(self, cursor):
+        products = Product.query.order_by(Product.id.asc())
+        page = get_page(products, per_page=ProductCollection._PER_PAGE, page=cursor)
+        return {"products": page, "cursor": page.paging}
 
     @jwt_required()
     @bp.doc(summary="Create Product", security=[{"access_token": []}])
@@ -160,3 +149,29 @@ class ProductSubcategories(MethodView):
     def get(self, id):
         product = Product.query.get_or_404(id)
         return {"subcategories": product.subcategories}
+
+
+@bp.route("/search")
+class ProductSearch(MethodView):
+    init_every_request = False
+
+    _PER_PAGE = 10
+    _MIN_SEARCH_THRESHOLD = 0.5
+
+    def _search(self, search_query):
+        ts_query = func.websearch_to_tsquery("english", search_query)
+        rank_expr = cast(func.ts_rank(Product.search_vector, ts_query), Numeric(5, 3))
+        rank = rank_expr.label("rank")
+
+        return Product.query.filter(
+            Product.search_vector.op("@@")(ts_query), rank > self._MIN_SEARCH_THRESHOLD
+        ).order_by(rank.desc(), Product.id)
+
+    @bp.doc(summary="Search for products")
+    @bp.arguments(SearchArgs, location="query", as_kwargs=True)
+    @bp.arguments(PaginationArgs, location="query", as_kwargs=True)
+    @bp.response(200, ProductsOut)
+    def get(self, q, cursor):
+        products = self._search(q)
+        page = get_page(products, per_page=ProductSearch._PER_PAGE, page=cursor)
+        return {"products": page, "cursor": page.paging}
