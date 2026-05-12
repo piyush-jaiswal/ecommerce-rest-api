@@ -75,7 +75,7 @@ category_subcategory = db.Table(
         db.ForeignKey("subcategory.id", ondelete="CASCADE", onupdate="CASCADE"),
         primary_key=True,
     ),
-    Index("category_subcategory_subcategory_id_idx", "subcategory_id", "category_id"),
+    Index(None, "subcategory_id", "category_id"),
 )
 
 subcategory_product = db.Table(
@@ -92,7 +92,7 @@ subcategory_product = db.Table(
         db.ForeignKey("product.id", ondelete="CASCADE", onupdate="CASCADE"),
         primary_key=True,
     ),
-    Index("subcategory_product_product_id_idx", "product_id", "subcategory_id"),
+    Index(None, "product_id", "subcategory_id"),
 )
 
 
