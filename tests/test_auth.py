@@ -79,6 +79,11 @@ class TestAuth:
         user = self._verify_user_in_db(self.TEST_EMAIL)
         assert user.password_hash != self.TEST_PASSWORD
 
+        assert user.created_on is not None
+        assert user.updated_on is not None
+        assert user.created_on.tzinfo is not None
+        assert user.updated_on.tzinfo is not None
+
     def test_register_duplicate_email(self, register_user):
         register_user(self.TEST_EMAIL, self.TEST_PASSWORD)
         response = register_user(self.TEST_EMAIL, self.TEST_PASSWORD)

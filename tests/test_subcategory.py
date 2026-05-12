@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from app.models import Subcategory
@@ -26,11 +28,19 @@ class TestSubcategory:
 
     def test_create_subcategory(self, create_subcategory):
         response = create_subcategory(self.TEST_SUBCATEGORY_NAME)
+        data = response.get_json()
 
         assert response.status_code == 201
-        data = response.get_json()
         assert data["name"] == self.TEST_SUBCATEGORY_NAME
         assert "id" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        created_at = utils.parse_api_datetime(data["created_at"])
+        updated_at = utils.parse_api_datetime(data["updated_at"])
+        assert created_at.tzinfo is not None
+        assert updated_at.tzinfo is not None
+
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
 
     def test_create_subcategory_duplicate_name(self, create_subcategory):
@@ -72,17 +82,23 @@ class TestSubcategory:
         response = create_subcategory("OldSubcat")
         data = response.get_json()
         sc_id = data["id"]
+        created0 = utils.parse_api_datetime(data["created_at"])
+        updated0 = utils.parse_api_datetime(data["updated_at"])
 
+        time.sleep(0.02)
         update_resp = self.client.put(
             f"/subcategories/{sc_id}",
             json={"name": "NewSubcat"},
             headers=create_authenticated_headers(),
         )
+        data = update_resp.get_json()
 
         assert update_resp.status_code == 200
-        data = update_resp.get_json()
         assert data["name"] == "NewSubcat"
         assert data["id"] == sc_id
+        assert utils.parse_api_datetime(data["created_at"]) == created0
+        assert utils.parse_api_datetime(data["updated_at"]) > updated0
+
         self._verify_subcategory_in_db("NewSubcat")
         self._verify_subcategory_in_db("OldSubcat", should_exist=False)
 

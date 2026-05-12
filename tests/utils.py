@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask_jwt_extended import create_access_token
 
@@ -21,3 +21,9 @@ def get_expired_token_headers(id=1):
 
 def get_invalid_token_headers():
     return get_auth_header("invalid.token.format")
+
+
+def parse_api_datetime(value: str):
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    return datetime.fromisoformat(value)
