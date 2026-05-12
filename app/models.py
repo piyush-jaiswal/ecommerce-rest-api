@@ -1,6 +1,6 @@
 from email_normalize import normalize
 from email_validator import EmailNotValidError, validate_email
-from sqlalchemy import CheckConstraint, Computed, Index, func
+from sqlalchemy import CheckConstraint, Computed, FetchedValue, Index, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -24,6 +24,12 @@ class User(db.Model):
         db.DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+    updated_on = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=FetchedValue(),
     )
 
     __table_args__ = (
@@ -107,6 +113,12 @@ class Category(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=FetchedValue(),
+    )
     subcategories = db.relationship(
         "Subcategory",
         secondary=category_subcategory,
@@ -124,6 +136,12 @@ class Subcategory(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True)
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=FetchedValue(),
     )
     categories = db.relationship(
         "Category",
@@ -150,6 +168,12 @@ class Product(db.Model):
     description = db.Column(db.String(500))
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=FetchedValue(),
     )
 
     search_vector = db.Column(
