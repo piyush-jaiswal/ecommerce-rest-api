@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from app.models import Category
@@ -31,6 +33,13 @@ class TestCategory:
         data = response.get_json()
         assert data["name"] == self.TEST_CATEGORY_NAME
         assert "id" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        created_at = utils.parse_api_datetime(data["created_at"])
+        updated_at = utils.parse_api_datetime(data["updated_at"])
+        assert created_at.tzinfo is not None
+        assert updated_at.tzinfo is not None
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
     def test_create_category_duplicate_name(self, create_category):
@@ -72,17 +81,22 @@ class TestCategory:
         response = create_category("OldName")
         data = response.get_json()
         cat_id = data["id"]
+        created0 = utils.parse_api_datetime(data["created_at"])
+        updated0 = utils.parse_api_datetime(data["updated_at"])
 
+        time.sleep(0.02)
         update_resp = self.client.put(
             f"/categories/{cat_id}",
             json={"name": "NewName"},
             headers=create_authenticated_headers(),
         )
-
         assert update_resp.status_code == 200
         data = update_resp.get_json()
+
         assert data["name"] == "NewName"
         assert data["id"] == cat_id
+        assert utils.parse_api_datetime(data["created_at"]) == created0
+        assert utils.parse_api_datetime(data["updated_at"]) > updated0
 
         self._verify_category_in_db("NewName")
         self._verify_category_in_db("OldName", should_exist=False)

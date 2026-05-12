@@ -1,4 +1,7 @@
+import logging
+
 import pytest
+from flask_migrate import upgrade
 from testcontainers.postgres import PostgresContainer
 
 from app import create_app, db
@@ -23,7 +26,8 @@ def app(pg_container):
     # setup
     app_context = app.app_context()
     app_context.push()
-    db.create_all()
+    upgrade()
+    app.logger.setLevel(logging.CRITICAL)  # don't need to print logs in tests
 
     yield app
 
