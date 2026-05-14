@@ -1,6 +1,6 @@
 import base64
 
-from marshmallow import Schema, ValidationError, fields, pre_load, validate, validates
+from marshmallow import Schema, ValidationError, fields, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, SQLAlchemySchema, auto_field
 from sqlakeyset import BadBookmark, unserialize_bookmark
 
@@ -46,20 +46,8 @@ class CategoryIn(SQLAlchemySchema):
     class Meta:
         model = Category
 
-    name = auto_field()
+    name = auto_field(pre_load=str.strip, validate=validate.Length(min=1))
     subcategories = fields.List(fields.Int())
-
-    @pre_load
-    def strip_strings(self, data, **kwargs):
-        if "name" in data and data["name"] is not None:
-            data["name"] = data["name"].strip()
-
-        return data
-
-    @validates("name")
-    def validate_str_min_len(self, value, data_key):
-        if len(value) < 1:
-            raise ValidationError("Cannot be empty")
 
 
 class SubcategoryOut(SQLAlchemyAutoSchema):
@@ -75,21 +63,9 @@ class SubcategoryIn(SQLAlchemySchema):
     class Meta:
         model = Subcategory
 
-    name = auto_field()
+    name = auto_field(pre_load=str.strip, validate=validate.Length(min=1))
     categories = fields.List(fields.Int())
     products = fields.List(fields.Int())
-
-    @pre_load
-    def strip_strings(self, data, **kwargs):
-        if "name" in data and data["name"] is not None:
-            data["name"] = data["name"].strip()
-
-        return data
-
-    @validates("name")
-    def validate_str_min_len(self, value, data_key):
-        if len(value) < 1:
-            raise ValidationError("Cannot be empty")
 
 
 class ProductOut(SQLAlchemyAutoSchema):
@@ -107,23 +83,9 @@ class ProductIn(SQLAlchemySchema):
     class Meta:
         model = Product
 
-    name = auto_field()
-    description = auto_field()
+    name = auto_field(pre_load=str.strip, validate=validate.Length(min=1))
+    description = auto_field(pre_load=lambda x: x.strip() if isinstance(x, str) else x)
     subcategories = fields.List(fields.Int())
-
-    @pre_load
-    def strip_strings(self, data, **kwargs):
-        if "name" in data and data["name"] is not None:
-            data["name"] = data["name"].strip()
-        if "description" in data and data["description"] is not None:
-            data["description"] = data["description"].strip()
-
-        return data
-
-    @validates("name")
-    def validate_str_min_len(self, value, data_key):
-        if len(value) < 1:
-            raise ValidationError("Cannot be empty")
 
 
 class SearchArgs(Schema):
@@ -139,14 +101,8 @@ class AuthIn(SQLAlchemySchema):
         model = User
 
     # email validation handled in User model
-    email = auto_field()
+    email = auto_field(pre_load=str.strip)
     password = fields.Str(required=True, validate=validate.Length(min=1))
-
-    @pre_load
-    def strip_strings(self, data, **kwargs):
-        if "email" in data and data["email"] is not None:
-            data["email"] = data["email"].strip()
-        return data
 
 
 class AuthOut(Schema):

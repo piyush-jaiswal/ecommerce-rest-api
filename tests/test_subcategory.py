@@ -43,6 +43,17 @@ class TestSubcategory:
 
         self._verify_subcategory_in_db(self.TEST_SUBCATEGORY_NAME)
 
+    def test_create_subcategory_duplicate_name_case_insensitive(
+        self, create_subcategory
+    ):
+        create_subcategory("Smartphones")
+        response = create_subcategory("smartphones")
+
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Subcategory with this name already exists" in data["message"]
+        assert self._count_subcategories() == 1
+
     def test_create_subcategory_duplicate_name(self, create_subcategory):
         create_subcategory(self.TEST_SUBCATEGORY_NAME)
 

@@ -42,6 +42,15 @@ class TestCategory:
         assert updated_at.tzinfo is not None
         self._verify_category_in_db(self.TEST_CATEGORY_NAME)
 
+    def test_create_category_duplicate_name_case_insensitive(self, create_category):
+        create_category("Electronics")
+        response = create_category("electronics")
+
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Category with this name already exists" in data["message"]
+        assert self._count_categories() == 1
+
     def test_create_category_duplicate_name(self, create_category):
         create_category(self.TEST_CATEGORY_NAME)
 

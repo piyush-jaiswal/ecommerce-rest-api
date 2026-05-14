@@ -45,6 +45,15 @@ class TestProduct:
 
         self._verify_product_in_db(self.TEST_PRODUCT_NAME)
 
+    def test_create_product_duplicate_name_case_insensitive(self, create_product):
+        create_product("iPhone 13", "Latest Apple iPhone")
+        response = create_product("iphone 13", "Latest Apple iPhone")
+
+        assert response.status_code == 409
+        data = response.get_json()
+        assert "Product with this name already exists" in data["message"]
+        assert self._count_products() == 1
+
     def test_create_product_duplicate_name(self, create_product):
         create_product(self.TEST_PRODUCT_NAME, self.TEST_PRODUCT_DESC)
 

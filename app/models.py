@@ -1,7 +1,7 @@
 from email_normalize import normalize
 from email_validator import EmailNotValidError, validate_email
 from sqlalchemy import CheckConstraint, Computed, FetchedValue, Index, func
-from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.dialects.postgresql import CITEXT, TSVECTOR
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
@@ -108,7 +108,7 @@ class Category(db.Model):
     __tablename__ = "category"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(
-        db.String(200), nullable=False, unique=True
+        CITEXT(200), nullable=False, unique=True
     )  # unique automatically creates a unique index
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -133,7 +133,7 @@ class Category(db.Model):
 class Subcategory(db.Model):
     __tablename__ = "subcategory"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
+    name = db.Column(CITEXT(200), nullable=False, unique=True)
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -164,7 +164,7 @@ class Subcategory(db.Model):
 class Product(db.Model):
     __tablename__ = "product"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
+    name = db.Column(CITEXT(200), nullable=False, unique=True)
     description = db.Column(db.String(500))
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
