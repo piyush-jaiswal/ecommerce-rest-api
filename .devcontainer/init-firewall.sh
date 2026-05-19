@@ -31,13 +31,19 @@ done
 # Also replay any chains captured from the live ruleset
 if [ -n "$DOCKER_NAT_CHAINS" ]; then
 	while IFS= read -r rule; do
-		iptables -t nat $rule 2>/dev/null || true
+		(
+			IFS=' '
+			iptables -t nat $rule
+		) 2>/dev/null || true
 	done <<<"$DOCKER_NAT_CHAINS"
 fi
 if [ -n "$DOCKER_NAT_RULES" ]; then
 	echo "Restoring Docker NAT rules..."
 	while IFS= read -r rule; do
-		iptables -t nat $rule 2>/dev/null || true
+		(
+			IFS=' '
+			iptables -t nat $rule
+		) 2>/dev/null || true
 	done <<<"$DOCKER_NAT_RULES"
 else
 	echo "No Docker NAT rules to restore"
@@ -50,13 +56,19 @@ for chain in DOCKER DOCKER-ISOLATION-STAGE-1 DOCKER-ISOLATION-STAGE-2 DOCKER-USE
 done
 if [ -n "$DOCKER_FILTER_CHAINS" ]; then
 	while IFS= read -r rule; do
-		iptables $rule 2>/dev/null || true
+		(
+			IFS=' '
+			iptables $rule
+		) 2>/dev/null || true
 	done <<<"$DOCKER_FILTER_CHAINS"
 fi
 if [ -n "$DOCKER_FILTER_RULES" ]; then
 	echo "Restoring Docker filter rules..."
 	while IFS= read -r rule; do
-		iptables $rule 2>/dev/null || true
+		(
+			IFS=' '
+			iptables $rule
+		) 2>/dev/null || true
 	done <<<"$DOCKER_FILTER_RULES"
 else
 	echo "No Docker filter rules to restore"
