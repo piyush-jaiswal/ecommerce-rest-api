@@ -1,25 +1,46 @@
 import logging
+import os
+from urllib.parse import urlparse
 
+import psycopg2
 import pytest
 from flask_migrate import upgrade
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy import text
 
 from app import create_app, db
 from tests import utils
 
+TEST_DATABASE_URI = os.getenv(
+    "SQLALCHEMY_DATABASE_URI",
+    "postgresql://postgres:postgres@localhost:5432/ecommerce_rest_api_test",
+)
+
+
+def _ensure_database():
+    parsed = urlparse(TEST_DATABASE_URI)
+    db_name = parsed.path.lstrip("/")
+    conn = psycopg2.connect(
+        host=parsed.hostname,
+        port=parsed.port,
+        user=parsed.username,
+        password=parsed.password,
+        dbname="postgres",
+    )
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+        if not cur.fetchone():
+            cur.execute(f'CREATE DATABASE "{db_name}"')
+    conn.close()
+
 
 @pytest.fixture(scope="session")
-def pg_container():
-    with PostgresContainer("postgres:16") as pg:
-        yield pg
-
-
-@pytest.fixture(scope="session")
-def app(pg_container):
+def app():
+    _ensure_database()
     app = create_app(
         "testing",
         **{
-            "SQLALCHEMY_DATABASE_URI": pg_container.get_connection_url(),
+            "SQLALCHEMY_DATABASE_URI": TEST_DATABASE_URI,
         },
     )
 
@@ -34,6 +55,9 @@ def app(pg_container):
     # teardown
     db.session.remove()
     db.drop_all()
+    with db.engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        conn.commit()
     db.engine.dispose()
     app_context.pop()
 
