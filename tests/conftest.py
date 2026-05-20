@@ -1,37 +1,42 @@
 import logging
-import os
-from urllib.parse import urlparse
 
-import psycopg2
 import pytest
 from flask_migrate import upgrade
-from sqlalchemy import text
+from sqlalchemy import create_engine, make_url, text
 
 from app import create_app, db
+from config import DevelopmentConfig
 from tests import utils
 
-TEST_DATABASE_URI = os.getenv(
-    "SQLALCHEMY_DATABASE_URI",
-    "postgresql://postgres:postgres@localhost:5432/ecommerce_rest_api_test",
-)
+
+def _get_db_urls():
+    dev_url = make_url(DevelopmentConfig.SQLALCHEMY_DATABASE_URI)
+    admin_url = dev_url.set(database="postgres")
+    test_db_name = "ecommerce_test_db"
+    test_url = dev_url.set(database=test_db_name)
+
+    return admin_url, test_url, test_db_name
+
+
+ADMIN_DB_URL, TEST_DB_URL, TEST_DB_NAME = _get_db_urls()
 
 
 def _ensure_database():
-    parsed = urlparse(TEST_DATABASE_URI)
-    db_name = parsed.path.lstrip("/")
-    conn = psycopg2.connect(
-        host=parsed.hostname,
-        port=parsed.port,
-        user=parsed.username,
-        password=parsed.password,
-        dbname="postgres",
-    )
-    conn.autocommit = True
-    with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
-        if not cur.fetchone():
-            cur.execute(f'CREATE DATABASE "{db_name}"')
-    conn.close()
+    admin_engine = create_engine(ADMIN_DB_URL)
+
+    # Postgres requires database creation to happen outside transactions
+    with admin_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        # Check if the test db exists
+        query = text("SELECT 1 FROM pg_database WHERE datname = :db_name").bindparams(
+            db_name=TEST_DB_NAME
+        )
+        database_exists = conn.execute(query).scalar()
+
+        # Create if not
+        if not database_exists:
+            conn.execute(text(f"CREATE DATABASE {TEST_DB_NAME};"))
+
+    admin_engine.dispose()
 
 
 @pytest.fixture(scope="session")
@@ -40,7 +45,7 @@ def app():
     app = create_app(
         "testing",
         **{
-            "SQLALCHEMY_DATABASE_URI": TEST_DATABASE_URI,
+            "SQLALCHEMY_DATABASE_URI": TEST_DB_URL,
         },
     )
 
