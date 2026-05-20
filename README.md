@@ -16,7 +16,6 @@ Paginates results using cursor-based pagination when products are fetched by cat
 
 Deployed as a vercel function with Postgres: [ecommerce-rest-api-five.vercel.app](https://ecommerce-rest-api-five.vercel.app)
 <br> Documented with Swagger UI.
-<br> Tests use `testcontainers` (requires Docker)
 <br><br>
 
 ### Requirements

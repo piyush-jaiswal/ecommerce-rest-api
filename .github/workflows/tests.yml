@@ -11,6 +11,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ecommerce_test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,5 +48,7 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
+        env:
+          SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost:5432/ecommerce_test_db
         run: |
           pytest --disable-warnings -q -rA

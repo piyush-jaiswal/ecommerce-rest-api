@@ -2,24 +2,50 @@ import logging
 
 import pytest
 from flask_migrate import upgrade
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy import create_engine, make_url, text
 
 from app import create_app, db
+from config import DevelopmentConfig
 from tests import utils
 
 
-@pytest.fixture(scope="session")
-def pg_container():
-    with PostgresContainer("postgres:16") as pg:
-        yield pg
+def _get_db_urls():
+    dev_url = make_url(DevelopmentConfig.SQLALCHEMY_DATABASE_URI)
+    admin_url = dev_url.set(database="postgres")
+    test_db_name = "ecommerce_test_db"
+    test_url = dev_url.set(database=test_db_name)
+
+    return admin_url, test_url, test_db_name
+
+
+ADMIN_DB_URL, TEST_DB_URL, TEST_DB_NAME = _get_db_urls()
+
+
+def _ensure_database():
+    admin_engine = create_engine(ADMIN_DB_URL)
+
+    # Postgres requires database creation to happen outside transactions
+    with admin_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        # Check if the test db exists
+        query = text("SELECT 1 FROM pg_database WHERE datname = :db_name").bindparams(
+            db_name=TEST_DB_NAME
+        )
+        database_exists = conn.execute(query).scalar()
+
+        # Create if not
+        if not database_exists:
+            conn.execute(text(f"CREATE DATABASE {TEST_DB_NAME};"))
+
+    admin_engine.dispose()
 
 
 @pytest.fixture(scope="session")
-def app(pg_container):
+def app():
+    _ensure_database()
     app = create_app(
         "testing",
         **{
-            "SQLALCHEMY_DATABASE_URI": pg_container.get_connection_url(),
+            "SQLALCHEMY_DATABASE_URI": TEST_DB_URL,
         },
     )
 
@@ -34,6 +60,9 @@ def app(pg_container):
     # teardown
     db.session.remove()
     db.drop_all()
+    with db.engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        conn.commit()
     db.engine.dispose()
     app_context.pop()
 
