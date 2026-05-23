@@ -21,6 +21,7 @@ from app.schemas import (
     SubcategoriesOut,
     SubcategoryIn,
     SubcategoryOut,
+    SubcategoryPatchIn,
 )
 
 bp = Blueprint("Subcategory", __name__)
@@ -56,12 +57,14 @@ class SubcategoryCollection(MethodView):
         subcategory = Subcategory(name=data["name"])
 
         if c_ids := data.get("categories"):
+            c_ids = set(c_ids)
             categories = Category.query.filter(Category.id.in_(c_ids)).all()
             if len(categories) != len(c_ids):
                 abort(422, message="One or more categories not present")
             subcategory.categories = categories
 
         if p_ids := data.get("products"):
+            p_ids = set(p_ids)
             products = Product.query.filter(Product.id.in_(p_ids)).all()
             if len(products) != len(p_ids):
                 abort(422, message="One or more products not present")
@@ -105,17 +108,19 @@ class SubcategoryById(MethodView):
             subcategory.name = name
 
         with db.session.no_autoflush:
-            if c_ids := data.get("categories"):
+            if "categories" in data:
+                c_ids = set(data["categories"])
                 categories = Category.query.filter(Category.id.in_(c_ids)).all()
                 if len(categories) != len(c_ids):
                     abort(422, message="One or more categories not present")
-                subcategory.categories.extend(categories)
+                subcategory.categories = categories
 
-            if p_ids := data.get("products"):
+            if "products" in data:
+                p_ids = set(data["products"])
                 products = Product.query.filter(Product.id.in_(p_ids)).all()
                 if len(products) != len(p_ids):
                     abort(422, message="One or more products not present")
-                subcategory.products.extend(products)
+                subcategory.products = products
 
         try:
             db.session.commit()
@@ -127,12 +132,123 @@ class SubcategoryById(MethodView):
                 == SubcategoryCollection._NAME_UNIQUE_CONSTRAINT.name
             ):
                 abort(409, message="Subcategory with this name already exists")
+            raise
+
+        return subcategory
+
+    @jwt_required()
+    @bp.doc(summary="Partially update Subcategory", security=[{"access_token": []}])
+    @bp.arguments(SubcategoryPatchIn)
+    @bp.response(200, SubcategoryOut)
+    def patch(self, data, id):
+        subcategory = self._get(id)
+
+        if "name" in data:
+            subcategory.name = data["name"]
+
+        with db.session.no_autoflush:
+            cat_add = set(data.get("categories_add", []))
+            cat_remove = set(data.get("categories_remove", []))
+            prod_add = set(data.get("products_add", []))
+            prod_remove = set(data.get("products_remove", []))
+
+            overlap = cat_add & cat_remove
+            if overlap:
+                abort(
+                    422,
+                    message=f"Cannot add and remove the same category: {sorted(overlap)}",
+                )
+            overlap = prod_add & prod_remove
+            if overlap:
+                abort(
+                    422,
+                    message=f"Cannot add and remove the same product: {sorted(overlap)}",
+                )
+
+            if cat_remove:
+                db.session.execute(
+                    category_subcategory.delete().where(
+                        category_subcategory.c.subcategory_id == subcategory.id,
+                        category_subcategory.c.category_id.in_(cat_remove),
+                    )
+                )
+
+            if prod_remove:
+                db.session.execute(
+                    subcategory_product.delete().where(
+                        subcategory_product.c.subcategory_id == subcategory.id,
+                        subcategory_product.c.product_id.in_(prod_remove),
+                    )
+                )
+
+            if cat_add:
+                existing = {
+                    row[0]
+                    for row in db.session.query(category_subcategory.c.category_id)
+                    .filter(
+                        category_subcategory.c.subcategory_id == subcategory.id,
+                        category_subcategory.c.category_id.in_(cat_add),
+                    )
+                    .all()
+                }
+                new_ids = [a for a in cat_add if a not in existing]
+                if new_ids:
+                    cats = Category.query.filter(Category.id.in_(new_ids)).all()
+                    if len(cats) != len(new_ids):
+                        abort(422, message="One or more categories not present")
+                    db.session.execute(
+                        category_subcategory.insert().values(
+                            [
+                                {"subcategory_id": subcategory.id, "category_id": c.id}
+                                for c in cats
+                            ]
+                        )
+                    )
+
+            if prod_add:
+                existing = {
+                    row[0]
+                    for row in db.session.query(subcategory_product.c.product_id)
+                    .filter(
+                        subcategory_product.c.subcategory_id == subcategory.id,
+                        subcategory_product.c.product_id.in_(prod_add),
+                    )
+                    .all()
+                }
+                new_ids = [a for a in prod_add if a not in existing]
+                if new_ids:
+                    prods = Product.query.filter(Product.id.in_(new_ids)).all()
+                    if len(prods) != len(new_ids):
+                        abort(422, message="One or more products not present")
+                    db.session.execute(
+                        subcategory_product.insert().values(
+                            [
+                                {"subcategory_id": subcategory.id, "product_id": p.id}
+                                for p in prods
+                            ]
+                        )
+                    )
+
+        try:
+            db.session.commit()
+        except IntegrityError as ie:
+            db.session.rollback()
+            if (
+                isinstance(ie.orig, UniqueViolation)
+                and ie.orig.diag.constraint_name
+                == SubcategoryCollection._NAME_UNIQUE_CONSTRAINT.name
+            ):
+                abort(409, message="Subcategory with this name already exists")
+
+            # Only reachable in race conditions; normal case handled by upfront filter
             if (
                 isinstance(ie.orig, UniqueViolation)
                 and ie.orig.diag.constraint_name
                 == category_subcategory.primary_key.name
             ):
                 abort(409, message="Subcategory and category already linked")
+
+            # Only reachable in race conditions; normal case handled by upfront filter
             if (
                 isinstance(ie.orig, UniqueViolation)
                 and ie.orig.diag.constraint_name == subcategory_product.primary_key.name

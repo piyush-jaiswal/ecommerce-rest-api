@@ -130,6 +130,50 @@ class TestCategory:
         self._verify_category_in_db("OldName")
         self._verify_category_in_db("NewName")
 
+    def test_patch_category_name(self, create_authenticated_headers, create_category):
+        response = create_category("OldName")
+        data = response.get_json()
+        cat_id = data["id"]
+        created0 = utils.parse_api_datetime(data["created_at"])
+        updated0 = utils.parse_api_datetime(data["updated_at"])
+
+        time.sleep(0.02)
+        patch_resp = self.client.patch(
+            f"/categories/{cat_id}",
+            json={"name": "PatchedName"},
+            headers=create_authenticated_headers(),
+        )
+        assert patch_resp.status_code == 200
+        data = patch_resp.get_json()
+
+        assert data["name"] == "PatchedName"
+        assert data["id"] == cat_id
+        assert utils.parse_api_datetime(data["created_at"]) == created0
+        assert utils.parse_api_datetime(data["updated_at"]) > updated0
+
+        self._verify_category_in_db("PatchedName")
+        self._verify_category_in_db("OldName", should_exist=False)
+
+    def test_patch_category_duplicate_name(
+        self, create_authenticated_headers, create_category
+    ):
+        create_category("ExistingName")
+        response = create_category("Target")
+        data = response.get_json()
+        cat_id = data["id"]
+
+        patch_resp = self.client.patch(
+            f"/categories/{cat_id}",
+            json={"name": "ExistingName"},
+            headers=create_authenticated_headers(),
+        )
+
+        assert patch_resp.status_code == 409
+        data = patch_resp.get_json()
+        assert "Category with this name already exists" in data["message"]
+        self._verify_category_in_db("ExistingName")
+        self._verify_category_in_db("Target")
+
     def test_delete_category(self, create_authenticated_headers, create_category):
         response = create_category("ToDelete")
         data = response.get_json()
@@ -185,6 +229,32 @@ class TestCategory:
         utils.verify_token_error_response(update_resp, expected_code)
         self._verify_category_in_db("UpdateTokenError")
         self._verify_category_in_db("UpdatedName", should_exist=False)
+
+    @pytest.mark.parametrize(
+        "get_headers, expected_code",
+        [
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required"),
+        ],
+    )
+    def test_patch_category_token_error(
+        self, get_headers, create_category, expected_code
+    ):
+        response = create_category("PatchTokenError")
+        data = response.get_json()
+        cat_id = data["id"]
+
+        patch_headers = get_headers()
+        patch_resp = self.client.patch(
+            f"/categories/{cat_id}",
+            json={"name": "ShouldNotUpdate"},
+            headers=patch_headers,
+        )
+
+        utils.verify_token_error_response(patch_resp, expected_code)
+        self._verify_category_in_db("PatchTokenError")
+        self._verify_category_in_db("ShouldNotUpdate", should_exist=False)
 
     @pytest.mark.parametrize(
         "get_headers, expected_code",
