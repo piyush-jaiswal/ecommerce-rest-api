@@ -134,6 +134,53 @@ class TestProduct:
         self._verify_product_in_db("OldProduct")
         self._verify_product_in_db("NewProduct")
 
+    def test_patch_product_name_and_description(
+        self, create_authenticated_headers, create_product
+    ):
+        response = create_product("OldProduct", "OldDesc")
+        data = response.get_json()
+        p_id = data["id"]
+        created0 = utils.parse_api_datetime(data["created_at"])
+        updated0 = utils.parse_api_datetime(data["updated_at"])
+
+        time.sleep(0.02)
+        patch_resp = self.client.patch(
+            f"/products/{p_id}",
+            json={"name": "PatchedProduct", "description": "PatchedDesc"},
+            headers=create_authenticated_headers(),
+        )
+        assert patch_resp.status_code == 200
+        data = patch_resp.get_json()
+
+        assert data["name"] == "PatchedProduct"
+        assert data["description"] == "PatchedDesc"
+        assert data["id"] == p_id
+        assert utils.parse_api_datetime(data["created_at"]) == created0
+        assert utils.parse_api_datetime(data["updated_at"]) > updated0
+
+        self._verify_product_in_db("PatchedProduct")
+        self._verify_product_in_db("OldProduct", should_exist=False)
+
+    def test_patch_product_duplicate_name(
+        self, create_authenticated_headers, create_product
+    ):
+        create_product("ExistingProduct", "desc")
+        response = create_product("Target", "desc")
+        data = response.get_json()
+        p_id = data["id"]
+
+        patch_resp = self.client.patch(
+            f"/products/{p_id}",
+            json={"name": "ExistingProduct"},
+            headers=create_authenticated_headers(),
+        )
+
+        assert patch_resp.status_code == 409
+        data = patch_resp.get_json()
+        assert "Product with this name already exists" in data["message"]
+        self._verify_product_in_db("ExistingProduct")
+        self._verify_product_in_db("Target")
+
     def test_delete_product(self, create_authenticated_headers, create_product):
         response = create_product("ToDelete", "desc")
         data = response.get_json()
@@ -189,6 +236,32 @@ class TestProduct:
         utils.verify_token_error_response(update_resp, expected_code)
         self._verify_product_in_db("UpdateTokenError")
         self._verify_product_in_db("UpdatedName", should_exist=False)
+
+    @pytest.mark.parametrize(
+        "get_headers, expected_code",
+        [
+            (utils.get_expired_token_headers, "token_expired"),
+            (utils.get_invalid_token_headers, "invalid_token"),
+            (lambda: None, "authorization_required"),
+        ],
+    )
+    def test_patch_product_token_error(
+        self, get_headers, create_product, expected_code
+    ):
+        response = create_product("PatchTokenError", "desc")
+        data = response.get_json()
+        p_id = data["id"]
+
+        patch_headers = get_headers()
+        patch_resp = self.client.patch(
+            f"/products/{p_id}",
+            json={"name": "ShouldNotUpdate"},
+            headers=patch_headers,
+        )
+
+        utils.verify_token_error_response(patch_resp, expected_code)
+        self._verify_product_in_db("PatchTokenError")
+        self._verify_product_in_db("ShouldNotUpdate", should_exist=False)
 
     @pytest.mark.parametrize(
         "get_headers, expected_code",

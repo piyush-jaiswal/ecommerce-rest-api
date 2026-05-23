@@ -105,7 +105,7 @@ class TestRelationships:
         )
         assert product["id"] in self._subcategory_product_ids(subcategory["id"])
 
-    def test_update_category_adds_subcategories(
+    def test_update_category_replaces_subcategories(
         self, create_authenticated_headers, create_category, create_subcategory
     ):
         subcategory1 = create_subcategory("U_SC1").get_json()
@@ -122,50 +122,234 @@ class TestRelationships:
         )
         assert update_response.status_code == 200
 
+        assert self._category_subcategory_ids(category["id"]) == [subcategory2["id"]]
+
+    def test_update_category_clears_subcategories(
+        self, create_authenticated_headers, create_category, create_subcategory
+    ):
+        subcategory = create_subcategory("C_SC").get_json()
+        category = create_category(
+            "C_Cat", subcategories=[subcategory["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.put(
+            f"/categories/{category['id']}",
+            json={"subcategories": []},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+        assert self._category_subcategory_ids(category["id"]) == []
+
+    def test_patch_category_add_subcategories(
+        self, create_authenticated_headers, create_category, create_subcategory
+    ):
+        subcategory1 = create_subcategory("PA_SC1").get_json()
+        subcategory2 = create_subcategory("PA_SC2").get_json()
+        category = create_category(
+            "PA_Cat", subcategories=[subcategory1["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={"subcategories_add": [subcategory2["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
         assert self._category_subcategory_ids(category["id"]) == sorted(
             [subcategory1["id"], subcategory2["id"]]
         )
 
-    def test_update_category_adds_linked_subcategories(
+    def test_patch_category_remove_subcategories(
         self, create_authenticated_headers, create_category, create_subcategory
     ):
-        subcategory = create_subcategory("U_SC1").get_json()
+        subcategory1 = create_subcategory("PR_SC1").get_json()
+        subcategory2 = create_subcategory("PR_SC2").get_json()
         category = create_category(
-            "U_Cat", subcategories=[subcategory["id"]]
+            "PR_Cat", subcategories=[subcategory1["id"], subcategory2["id"]]
         ).get_json()
 
         headers = create_authenticated_headers()
-        response = self.client.put(
+        update_response = self.client.patch(
             f"/categories/{category['id']}",
-            json={"subcategories": [subcategory["id"]]},
+            json={"subcategories_remove": [subcategory1["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._category_subcategory_ids(category["id"]) == [subcategory2["id"]]
+
+    def test_patch_category_add_and_remove_subcategories(
+        self, create_authenticated_headers, create_category, create_subcategory
+    ):
+        subcategory1 = create_subcategory("PAR_SC1").get_json()
+        subcategory2 = create_subcategory("PAR_SC2").get_json()
+        subcategory3 = create_subcategory("PAR_SC3").get_json()
+        category = create_category(
+            "PAR_Cat",
+            subcategories=[subcategory1["id"], subcategory2["id"]],
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={
+                "subcategories_add": [subcategory3["id"]],
+                "subcategories_remove": [subcategory1["id"]],
+            },
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._category_subcategory_ids(category["id"]) == sorted(
+            [subcategory2["id"], subcategory3["id"]]
+        )
+
+    def test_patch_category_add_linked_subcategory_is_noop(
+        self, create_authenticated_headers, create_category, create_subcategory
+    ):
+        subcategory = create_subcategory("PL_SC").get_json()
+        category = create_category(
+            "PL_Cat", subcategories=[subcategory["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={"subcategories_add": [subcategory["id"]]},
             headers=headers,
         )
 
-        assert response.status_code == 409
-        data = response.get_json()
-        assert "Category and subcategory already linked" in data["message"]
+        assert response.status_code == 200
         assert self._category_subcategory_ids(category["id"]) == [subcategory["id"]]
 
-    def test_update_subcategory_adds_categories_and_products(
+    def test_patch_category_add_remove_overlap_returns_422(
+        self, create_authenticated_headers, create_category
+    ):
+        category = create_category("Overlap_Cat").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={"subcategories_add": [1, 2], "subcategories_remove": [2, 3]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "2" in data["message"]
+
+    def test_patch_category_invalid_subcategory(
+        self, create_authenticated_headers, create_category
+    ):
+        category = create_category("INV_Cat").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={"subcategories_add": [999999]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "One or more subcategories not present" in data["message"]
+        assert self._category_subcategory_ids(category["id"]) == []
+
+    def test_patch_category_noop(self, create_authenticated_headers, create_category):
+        category = create_category("NOOP_Cat").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/categories/{category['id']}",
+            json={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.get_json()["name"] == "NOOP_Cat"
+
+    def test_update_subcategory_replaces_categories_and_products(
         self,
         create_authenticated_headers,
         create_category,
         create_product,
         create_subcategory,
     ):
-        category1 = create_category("UC1").get_json()
-        category2 = create_category("UC2").get_json()
-        product1 = create_product("UP1").get_json()
-        product2 = create_product("UP2").get_json()
-        subcategory = create_subcategory("U_SC").get_json()
+        category1 = create_category("USC_C1").get_json()
+        category2 = create_category("USC_C2").get_json()
+        product1 = create_product("USC_P1").get_json()
+        product2 = create_product("USC_P2").get_json()
+        subcategory = create_subcategory(
+            "USC_SC", categories=[category1["id"]], products=[product1["id"]]
+        ).get_json()
 
         headers = create_authenticated_headers()
         update_response = self.client.put(
             f"/subcategories/{subcategory['id']}",
             json={
-                "categories": [category1["id"], category2["id"]],
-                "products": [product1["id"], product2["id"]],
+                "categories": [category2["id"]],
+                "products": [product2["id"]],
             },
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._subcategory_category_ids(subcategory["id"]) == [category2["id"]]
+        assert self._subcategory_product_ids(subcategory["id"]) == [product2["id"]]
+
+    def test_update_subcategory_clears_categories(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category = create_category("USC_CC").get_json()
+        subcategory = create_subcategory(
+            "USC_CS", categories=[category["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.put(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories": []},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+        assert self._subcategory_category_ids(subcategory["id"]) == []
+
+    def test_update_subcategory_clears_products(
+        self,
+        create_authenticated_headers,
+        create_product,
+        create_subcategory,
+    ):
+        product = create_product("USC_CP").get_json()
+        subcategory = create_subcategory("USC_PS", products=[product["id"]]).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.put(
+            f"/subcategories/{subcategory['id']}",
+            json={"products": []},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+        assert self._subcategory_product_ids(subcategory["id"]) == []
+
+    def test_patch_subcategory_add_categories(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category1 = create_category("PSAC_C1").get_json()
+        category2 = create_category("PSAC_C2").get_json()
+        subcategory = create_subcategory(
+            "PSAC_SC", categories=[category1["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories_add": [category2["id"]]},
             headers=headers,
         )
         assert update_response.status_code == 200
@@ -173,60 +357,268 @@ class TestRelationships:
         assert self._subcategory_category_ids(subcategory["id"]) == sorted(
             [category1["id"], category2["id"]]
         )
+
+    def test_patch_subcategory_remove_categories(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category1 = create_category("PSRC_C1").get_json()
+        category2 = create_category("PSRC_C2").get_json()
+        subcategory = create_subcategory(
+            "PSRC_SC", categories=[category1["id"], category2["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories_remove": [category1["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._subcategory_category_ids(subcategory["id"]) == [category2["id"]]
+
+    def test_patch_subcategory_add_and_remove_categories(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category1 = create_category("PSARC_C1").get_json()
+        category2 = create_category("PSARC_C2").get_json()
+        category3 = create_category("PSARC_C3").get_json()
+        subcategory = create_subcategory(
+            "PSARC_SC",
+            categories=[category1["id"], category2["id"]],
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={
+                "categories_add": [category3["id"]],
+                "categories_remove": [category1["id"]],
+            },
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._subcategory_category_ids(subcategory["id"]) == sorted(
+            [category2["id"], category3["id"]]
+        )
+
+    def test_patch_subcategory_add_linked_category_is_noop(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category = create_category("PSALC_C").get_json()
+        subcategory = create_subcategory(
+            "PSALC_SC", categories=[category["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories_add": [category["id"]]},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        assert self._subcategory_category_ids(subcategory["id"]) == [category["id"]]
+
+    def test_patch_subcategory_add_remove_category_overlap_returns_422(
+        self,
+        create_authenticated_headers,
+        create_category,
+        create_subcategory,
+    ):
+        category = create_category("PSAROC_C").get_json()
+        subcategory = create_subcategory("PSAROC_SC").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={
+                "categories_add": [category["id"]],
+                "categories_remove": [category["id"]],
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert str(category["id"]) in data["message"]
+
+    def test_patch_subcategory_add_products(
+        self,
+        create_authenticated_headers,
+        create_product,
+        create_subcategory,
+    ):
+        product1 = create_product("PSAP_P1").get_json()
+        product2 = create_product("PSAP_P2").get_json()
+        subcategory = create_subcategory(
+            "PSAP_SC", products=[product1["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"products_add": [product2["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
         assert self._subcategory_product_ids(subcategory["id"]) == sorted(
             [product1["id"], product2["id"]]
         )
 
-    def test_update_subcategory_adds_linked_categories_and_products(
+    def test_patch_subcategory_remove_products(
         self,
         create_authenticated_headers,
-        create_category,
         create_product,
         create_subcategory,
     ):
-        category = create_category("UC1").get_json()
-        product = create_product("UP1").get_json()
+        product1 = create_product("PSRP_P1").get_json()
+        product2 = create_product("PSRP_P2").get_json()
         subcategory = create_subcategory(
-            "U_SC", categories=[category["id"]], products=[product["id"]]
+            "PSRP_SC", products=[product1["id"], product2["id"]]
         ).get_json()
 
         headers = create_authenticated_headers()
-        response = self.client.put(
+        update_response = self.client.patch(
             f"/subcategories/{subcategory['id']}",
-            json={"categories": [category["id"]]},
+            json={"products_remove": [product1["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._subcategory_product_ids(subcategory["id"]) == [product2["id"]]
+
+    def test_patch_subcategory_add_and_remove_products(
+        self,
+        create_authenticated_headers,
+        create_product,
+        create_subcategory,
+    ):
+        product1 = create_product("PSARP_P1").get_json()
+        product2 = create_product("PSARP_P2").get_json()
+        product3 = create_product("PSARP_P3").get_json()
+        subcategory = create_subcategory(
+            "PSARP_SC",
+            products=[product1["id"], product2["id"]],
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={
+                "products_add": [product3["id"]],
+                "products_remove": [product1["id"]],
+            },
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._subcategory_product_ids(subcategory["id"]) == sorted(
+            [product2["id"], product3["id"]]
+        )
+
+    def test_patch_subcategory_add_linked_product_is_noop(
+        self,
+        create_authenticated_headers,
+        create_product,
+        create_subcategory,
+    ):
+        product = create_product("PSALP_P").get_json()
+        subcategory = create_subcategory(
+            "PSALP_SC", products=[product["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"products_add": [product["id"]]},
             headers=headers,
         )
 
-        assert response.status_code == 409
-        data = response.get_json()
-        assert "Subcategory and category already linked" in data["message"]
-        resp_p = self.client.put(
-            f"/subcategories/{subcategory['id']}",
-            json={"products": [product["id"]]},
-            headers=headers,
-        )
-        resp_cp = self.client.put(
-            f"/subcategories/{subcategory['id']}",
-            json={"categories": [category["id"]], "products": [product["id"]]},
-            headers=headers,
-        )
-
-        assert resp_p.status_code == 409
-        data_p = resp_p.get_json()
-        assert "Subcategory and product already linked" in data_p["message"]
-
-        assert resp_cp.status_code == 409
-        data_cp = resp_cp.get_json()
-        # Could be either message depending on which constraint is hit first
-        assert (
-            "Subcategory and category already linked" in data_cp["message"]
-            or "Subcategory and product already linked" in data_cp["message"]
-        )
-
-        assert self._subcategory_category_ids(subcategory["id"]) == [category["id"]]
+        assert response.status_code == 200
         assert self._subcategory_product_ids(subcategory["id"]) == [product["id"]]
 
-    def test_update_product_adds_subcategories(
+    def test_patch_subcategory_add_remove_product_overlap_returns_422(
+        self,
+        create_authenticated_headers,
+        create_product,
+        create_subcategory,
+    ):
+        product = create_product("PSAROP_P").get_json()
+        subcategory = create_subcategory("PSAROP_SC").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"products_add": [product["id"]], "products_remove": [product["id"]]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert str(product["id"]) in data["message"]
+
+    def test_patch_subcategory_invalid_category(
+        self,
+        create_authenticated_headers,
+        create_subcategory,
+    ):
+        subcategory = create_subcategory("PSIC_SC").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"categories_add": [999999]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "One or more categories not present" in data["message"]
+        assert self._subcategory_category_ids(subcategory["id"]) == []
+
+    def test_patch_subcategory_invalid_product(
+        self,
+        create_authenticated_headers,
+        create_subcategory,
+    ):
+        subcategory = create_subcategory("PSIP_SC").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={"products_add": [999999]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "One or more products not present" in data["message"]
+        assert self._subcategory_product_ids(subcategory["id"]) == []
+
+    def test_patch_subcategory_noop(
+        self,
+        create_authenticated_headers,
+        create_subcategory,
+    ):
+        subcategory = create_subcategory("PSN_SC").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/subcategories/{subcategory['id']}",
+            json={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.get_json()["name"] == "PSN_SC"
+
+    def test_update_product_replaces_subcategories(
         self, create_authenticated_headers, create_product, create_subcategory
     ):
         subcategory1 = create_subcategory("UPS1").get_json()
@@ -243,31 +635,155 @@ class TestRelationships:
         )
         assert update_response.status_code == 200
 
-        assert self._product_subcategory_ids(product["id"]) == sorted(
-            [subcategory1["id"], subcategory2["id"]]
-        )
+        assert self._product_subcategory_ids(product["id"]) == [subcategory2["id"]]
 
-    def test_update_product_adds_linked_subcategories(
+    def test_update_product_clears_subcategories(
         self, create_authenticated_headers, create_product, create_subcategory
     ):
-        subcategory1 = create_subcategory("UPS1").get_json()
-        subcategory2 = create_subcategory("UPS2").get_json()
+        subcategory = create_subcategory("UPC_SC").get_json()
         product = create_product(
-            "UP", "desc", subcategories=[subcategory1["id"], subcategory2["id"]]
+            "UPC", "desc", subcategories=[subcategory["id"]]
         ).get_json()
 
-        response = self.client.put(
+        headers = create_authenticated_headers()
+        update_response = self.client.put(
             f"/products/{product['id']}",
-            json={"subcategories": [subcategory1["id"]]},
-            headers=create_authenticated_headers(),
+            json={"subcategories": []},
+            headers=headers,
         )
+        assert update_response.status_code == 200
+        assert self._product_subcategory_ids(product["id"]) == []
 
-        assert response.status_code == 409
-        data = response.get_json()
-        assert "Product and subcategory already linked" in data["message"]
+    def test_patch_product_add_subcategories(
+        self, create_authenticated_headers, create_product, create_subcategory
+    ):
+        subcategory1 = create_subcategory("PPA_SC1").get_json()
+        subcategory2 = create_subcategory("PPA_SC2").get_json()
+        product = create_product(
+            "PPA", "desc", subcategories=[subcategory1["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/products/{product['id']}",
+            json={"subcategories_add": [subcategory2["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
         assert self._product_subcategory_ids(product["id"]) == sorted(
             [subcategory1["id"], subcategory2["id"]]
         )
+
+    def test_patch_product_remove_subcategories(
+        self, create_authenticated_headers, create_product, create_subcategory
+    ):
+        subcategory1 = create_subcategory("PPR_SC1").get_json()
+        subcategory2 = create_subcategory("PPR_SC2").get_json()
+        product = create_product(
+            "PPR",
+            "desc",
+            subcategories=[subcategory1["id"], subcategory2["id"]],
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/products/{product['id']}",
+            json={"subcategories_remove": [subcategory1["id"]]},
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._product_subcategory_ids(product["id"]) == [subcategory2["id"]]
+
+    def test_patch_product_add_and_remove_subcategories(
+        self, create_authenticated_headers, create_product, create_subcategory
+    ):
+        subcategory1 = create_subcategory("PPAR_SC1").get_json()
+        subcategory2 = create_subcategory("PPAR_SC2").get_json()
+        subcategory3 = create_subcategory("PPAR_SC3").get_json()
+        product = create_product(
+            "PPAR",
+            "desc",
+            subcategories=[subcategory1["id"], subcategory2["id"]],
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        update_response = self.client.patch(
+            f"/products/{product['id']}",
+            json={
+                "subcategories_add": [subcategory3["id"]],
+                "subcategories_remove": [subcategory1["id"]],
+            },
+            headers=headers,
+        )
+        assert update_response.status_code == 200
+
+        assert self._product_subcategory_ids(product["id"]) == sorted(
+            [subcategory2["id"], subcategory3["id"]]
+        )
+
+    def test_patch_product_add_linked_subcategory_is_noop(
+        self, create_authenticated_headers, create_product, create_subcategory
+    ):
+        subcategory = create_subcategory("PPL_SC").get_json()
+        product = create_product(
+            "PPL", "desc", subcategories=[subcategory["id"]]
+        ).get_json()
+
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/products/{product['id']}",
+            json={"subcategories_add": [subcategory["id"]]},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        assert self._product_subcategory_ids(product["id"]) == [subcategory["id"]]
+
+    def test_patch_product_add_remove_overlap_returns_422(
+        self, create_authenticated_headers, create_product
+    ):
+        product = create_product("PPO", "desc").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/products/{product['id']}",
+            json={"subcategories_add": [1, 2], "subcategories_remove": [2, 3]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "2" in data["message"]
+
+    def test_patch_product_invalid_subcategory(
+        self, create_authenticated_headers, create_product
+    ):
+        product = create_product("PPIS", "desc").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/products/{product['id']}",
+            json={"subcategories_add": [999999]},
+            headers=headers,
+        )
+
+        assert response.status_code == 422
+        data = response.get_json()
+        assert "One or more subcategories not present" in data["message"]
+        assert self._product_subcategory_ids(product["id"]) == []
+
+    def test_patch_product_noop(self, create_authenticated_headers, create_product):
+        product = create_product("PPN", "desc").get_json()
+        headers = create_authenticated_headers()
+        response = self.client.patch(
+            f"/products/{product['id']}",
+            json={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["name"] == "PPN"
+        assert data["description"] == "desc"
 
     def test_get_category_subcategories_empty(self, create_category):
         category = create_category("Cat_NoSC").get_json()
