@@ -50,6 +50,17 @@ class CategoryIn(SQLAlchemySchema):
     subcategories = fields.List(fields.Int())
 
 
+class CategoryPatchIn(SQLAlchemySchema):
+    class Meta:
+        model = Category
+
+    name = auto_field(
+        required=False, pre_load=str.strip, validate=validate.Length(min=1)
+    )
+    subcategories_add = fields.List(fields.Int(), required=False)
+    subcategories_remove = fields.List(fields.Int(), required=False)
+
+
 class SubcategoryOut(SQLAlchemyAutoSchema):
     class Meta:
         model = Subcategory
@@ -66,6 +77,19 @@ class SubcategoryIn(SQLAlchemySchema):
     name = auto_field(pre_load=str.strip, validate=validate.Length(min=1))
     categories = fields.List(fields.Int())
     products = fields.List(fields.Int())
+
+
+class SubcategoryPatchIn(SQLAlchemySchema):
+    class Meta:
+        model = Subcategory
+
+    name = auto_field(
+        required=False, pre_load=str.strip, validate=validate.Length(min=1)
+    )
+    categories_add = fields.List(fields.Int(), required=False)
+    categories_remove = fields.List(fields.Int(), required=False)
+    products_add = fields.List(fields.Int(), required=False)
+    products_remove = fields.List(fields.Int(), required=False)
 
 
 class ProductOut(SQLAlchemyAutoSchema):
@@ -86,6 +110,20 @@ class ProductIn(SQLAlchemySchema):
     name = auto_field(pre_load=str.strip, validate=validate.Length(min=1))
     description = auto_field(pre_load=lambda x: x.strip() if isinstance(x, str) else x)
     subcategories = fields.List(fields.Int())
+
+
+class ProductPatchIn(SQLAlchemySchema):
+    class Meta:
+        model = Product
+
+    name = auto_field(
+        required=False, pre_load=str.strip, validate=validate.Length(min=1)
+    )
+    description = auto_field(
+        required=False, pre_load=lambda x: x.strip() if isinstance(x, str) else x
+    )
+    subcategories_add = fields.List(fields.Int(), required=False)
+    subcategories_remove = fields.List(fields.Int(), required=False)
 
 
 class SearchArgs(Schema):
