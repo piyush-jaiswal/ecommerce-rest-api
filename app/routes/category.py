@@ -56,6 +56,7 @@ class CategoryCollection(MethodView):
         category = Category(name=data["name"])
 
         if sc_ids := data.get("subcategories"):
+            sc_ids = set(sc_ids)
             subcategories = Subcategory.query.filter(Subcategory.id.in_(sc_ids)).all()
             if len(subcategories) != len(sc_ids):
                 abort(422, message="One or more subcategories not present")
@@ -101,7 +102,7 @@ class CategoryById(MethodView):
 
         with db.session.no_autoflush:
             if "subcategories" in data:
-                sc_ids = data["subcategories"]
+                sc_ids = set(data["subcategories"])
                 subcategories = Subcategory.query.filter(
                     Subcategory.id.in_(sc_ids)
                 ).all()
@@ -134,10 +135,10 @@ class CategoryById(MethodView):
             category.name = data["name"]
 
         with db.session.no_autoflush:
-            add_ids = data.get("subcategories_add", [])
-            remove_ids = data.get("subcategories_remove", [])
+            add_ids = set(data.get("subcategories_add", []))
+            remove_ids = set(data.get("subcategories_remove", []))
 
-            overlap = set(add_ids) & set(remove_ids)
+            overlap = add_ids & remove_ids
             if overlap:
                 abort(
                     422,

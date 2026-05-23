@@ -57,12 +57,14 @@ class SubcategoryCollection(MethodView):
         subcategory = Subcategory(name=data["name"])
 
         if c_ids := data.get("categories"):
+            c_ids = set(c_ids)
             categories = Category.query.filter(Category.id.in_(c_ids)).all()
             if len(categories) != len(c_ids):
                 abort(422, message="One or more categories not present")
             subcategory.categories = categories
 
         if p_ids := data.get("products"):
+            p_ids = set(p_ids)
             products = Product.query.filter(Product.id.in_(p_ids)).all()
             if len(products) != len(p_ids):
                 abort(422, message="One or more products not present")
@@ -107,14 +109,14 @@ class SubcategoryById(MethodView):
 
         with db.session.no_autoflush:
             if "categories" in data:
-                c_ids = data["categories"]
+                c_ids = set(data["categories"])
                 categories = Category.query.filter(Category.id.in_(c_ids)).all()
                 if len(categories) != len(c_ids):
                     abort(422, message="One or more categories not present")
                 subcategory.categories = categories
 
             if "products" in data:
-                p_ids = data["products"]
+                p_ids = set(data["products"])
                 products = Product.query.filter(Product.id.in_(p_ids)).all()
                 if len(products) != len(p_ids):
                     abort(422, message="One or more products not present")
@@ -145,18 +147,18 @@ class SubcategoryById(MethodView):
             subcategory.name = data["name"]
 
         with db.session.no_autoflush:
-            cat_add = data.get("categories_add", [])
-            cat_remove = data.get("categories_remove", [])
-            prod_add = data.get("products_add", [])
-            prod_remove = data.get("products_remove", [])
+            cat_add = set(data.get("categories_add", []))
+            cat_remove = set(data.get("categories_remove", []))
+            prod_add = set(data.get("products_add", []))
+            prod_remove = set(data.get("products_remove", []))
 
-            overlap = set(cat_add) & set(cat_remove)
+            overlap = cat_add & cat_remove
             if overlap:
                 abort(
                     422,
                     message=f"Cannot add and remove the same category: {sorted(overlap)}",
                 )
-            overlap = set(prod_add) & set(prod_remove)
+            overlap = prod_add & prod_remove
             if overlap:
                 abort(
                     422,
