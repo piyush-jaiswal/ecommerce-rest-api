@@ -124,6 +124,11 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 
 # Resolve and add other allowed domains
 for domain in \
+	"models.dev" \
+	"opencode.ai" \
+	"search.parallel.ai" \
+	"mcp.exa.ai" \
+	"registry.npmjs.org" \
 	"marketplace.visualstudio.com" \
 	"*.gallerycdn.vsassets.io" \
 	"vscode.blob.core.windows.net" \

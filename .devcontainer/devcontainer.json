@@ -33,7 +33,8 @@
   },
   "remoteUser": "vscode",
   "mounts": [
-    "source=bashhistory-${devcontainerId},target=/commandhistory,type=volume"
+    "source=bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+    "source=opencode-data-${devcontainerId},target=/home/vscode/.local/share/opencode,type=volume"
   ],
   "remoteEnv": {
     "TZ": "${localEnv:TZ:UTC}"

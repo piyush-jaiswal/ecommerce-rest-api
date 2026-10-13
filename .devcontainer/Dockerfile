@@ -60,3 +60,13 @@ USER root
 COPY .devcontainer/init-firewall.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init-firewall.sh
 USER $USERNAME
+
+# Install opencode
+RUN curl -fsSL https://opencode.ai/v2/install -o /tmp/install-opencode.sh \
+  && bash /tmp/install-opencode.sh \
+  && rm /tmp/install-opencode.sh
+
+# Persist opencode session data (mounted as a volume in devcontainer.json).
+# Pre-created so a fresh named volume inherits vscode ownership.
+RUN mkdir -p /home/$USERNAME/.local/share/opencode \
+  && chown $USERNAME:$USERNAME /home/$USERNAME/.local/share/opencode
